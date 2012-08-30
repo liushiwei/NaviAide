@@ -1,0 +1,25 @@
+<resources xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <style name="AppTheme" parent="android:Theme.Light" />
+    <style name="Button_Style">
+        <item name="android:textColor">#404040</item>
+        <item name="android:textSize">18sp</item>
+    </style>
+    
+    <style name="Button_Style_gone">
+        <item name="android:visibility">gone</item>
+        <item name="android:textColor">#404040</item>
+        <item name="android:textSize">18sp</item>
+    </style>
+    
+    <style name="LocationProgressStyle" parent="@android:style/Widget.ProgressBar">
+        <item name="android:maxWidth">20.0dip</item>
+        <item name="android:maxHeight">20.0dip</item>
+        <item name="android:indeterminateDrawable">@drawable/loc_progress_bar</item>
+        <item name="android:indeterminateDuration">1500</item>
+        <item name="android:indeterminateBehavior">repeat</item>
+        <item name="android:minWidth">20.0dip</item>
+        <item name="android:minHeight">20.0dip</item>
+    </style>
+
+</resources>

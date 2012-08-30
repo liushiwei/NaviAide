@@ -1,0 +1,233 @@
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@drawable/bg" >
+
+    <HorizontalScrollView
+        android:id="@+id/horizontalScrollView1"
+        android:layout_width="wrap_content"
+        android:layout_height="match_parent" >
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:orientation="vertical" >
+
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:gravity="center"
+                android:orientation="horizontal" >
+
+                <Button
+                    android:id="@+id/parking"
+                    style="@style/Button_Style"
+                    android:layout_width="@dimen/button_width"
+                    android:layout_height="@dimen/button_height"
+                    android:layout_marginLeft="@dimen/button_marginLeft"
+                    android:drawableTop="@drawable/parking"
+                    android:onClick="onClick"
+                    android:paddingTop="@dimen/button_drawablePadding"
+                    android:text="Parking" />
+
+                <Button
+                    android:id="@+id/gas_station"
+                    style="@style/Button_Style"
+                    android:layout_width="@dimen/button_width"
+                    android:layout_height="@dimen/button_height"
+                    android:layout_marginLeft="@dimen/button_marginLeft"
+                    android:drawableTop="@drawable/gas"
+                    android:onClick="onClick"
+                    android:paddingTop="@dimen/button_drawablePadding"
+                    android:text="Gas Station" />
+
+                <Button
+                    android:id="@+id/food"
+                    style="@style/Button_Style"
+                    android:layout_width="@dimen/button_width"
+                    android:layout_height="@dimen/button_height"
+                    android:layout_marginLeft="@dimen/button_marginLeft"
+                    android:drawableTop="@drawable/food"
+                    android:onClick="onClick"
+                    android:paddingTop="@dimen/button_drawablePadding"
+                    android:text="Food" />
+
+                <Button
+                    android:id="@+id/gdcyh"
+                    style="@style/Button_Style_gone"
+                    android:layout_width="@dimen/button_width"
+                    android:layout_height="@dimen/button_height"
+                    android:layout_marginLeft="@dimen/button_marginLeft"
+                    android:drawableTop="@drawable/gdcyh"
+                    android:onClick="onClick"
+                    android:paddingTop="@dimen/button_drawablePadding"
+                    android:text="高德车友汇" />
+
+                <Button
+                    android:id="@+id/kaka"
+                    style="@style/Button_Style_gone"
+                    android:layout_width="@dimen/button_width"
+                    android:layout_height="@dimen/button_height"
+                    android:layout_marginLeft="@dimen/button_marginLeft"
+                    android:drawableTop="@drawable/kaka"
+                    android:onClick="onClick"
+                    android:paddingTop="@dimen/button_drawablePadding"
+                    android:text="卡卡助手" />
+
+                <Button
+                    android:id="@+id/hlzh"
+                    style="@style/Button_Style_gone"
+                    android:layout_width="@dimen/button_width"
+                    android:layout_height="@dimen/button_height"
+                    android:layout_marginLeft="@dimen/button_marginLeft"
+                    android:drawableTop="@drawable/hlzh"
+                    android:onClick="onClick"
+                    android:paddingTop="@dimen/button_drawablePadding"
+                    android:text="航旅纵横" />
+
+                <Button
+                    android:id="@+id/hbgj"
+                    style="@style/Button_Style_gone"
+                    android:layout_width="@dimen/button_width"
+                    android:layout_height="@dimen/button_height"
+                    android:layout_marginLeft="@dimen/button_marginLeft"
+                    android:drawableTop="@drawable/hbgj"
+                    android:onClick="onClick"
+                    android:paddingTop="@dimen/button_drawablePadding"
+                    android:text="航班管家" />
+
+                <Button
+                    android:id="@+id/czjt"
+                    style="@style/Button_Style_gone"
+                    android:layout_width="@dimen/button_width"
+                    android:layout_height="@dimen/button_height"
+                    android:layout_marginLeft="@dimen/button_marginLeft"
+                    android:drawableTop="@drawable/czjt"
+                    android:onClick="onClick"
+                    android:paddingTop="@dimen/button_drawablePadding"
+                    android:text="车在囧途" />
+
+                <Button
+                    android:id="@+id/sslk"
+                    style="@style/Button_Style_gone"
+                    android:layout_width="@dimen/button_width"
+                    android:layout_height="@dimen/button_height"
+                    android:layout_marginLeft="@dimen/button_marginLeft"
+                    android:drawableTop="@drawable/sslk"
+                    android:onClick="onClick"
+                    android:paddingTop="@dimen/button_drawablePadding"
+                    android:text="实时路况" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:gravity="center"
+                android:orientation="horizontal" >
+
+                <Button
+                    android:id="@+id/bank"
+                    style="@style/Button_Style"
+                    android:layout_width="@dimen/button_width"
+                    android:layout_height="@dimen/button_height"
+                    android:layout_marginLeft="@dimen/button_marginLeft"
+                    android:drawableTop="@drawable/bank"
+                    android:onClick="onClick"
+                    android:paddingTop="@dimen/button_drawablePadding"
+                    android:text="Bank" />
+
+                <Button
+                    android:id="@+id/sport"
+                    style="@style/Button_Style"
+                    android:layout_width="@dimen/button_width"
+                    android:layout_height="@dimen/button_height"
+                    android:layout_marginLeft="@dimen/button_marginLeft"
+                    android:drawableTop="@drawable/sport"
+                    android:onClick="onClick"
+                    android:paddingTop="@dimen/button_drawablePadding"
+                    android:text="Sport" />
+
+                <Button
+                    android:id="@+id/coffee"
+                    style="@style/Button_Style"
+                    android:layout_width="@dimen/button_width"
+                    android:layout_height="@dimen/button_height"
+                    android:layout_marginLeft="@dimen/button_marginLeft"
+                    android:drawableTop="@drawable/coffee"
+                    android:onClick="onClick"
+                    android:paddingTop="@dimen/button_drawablePadding"
+                    android:text="coffee" />
+
+                <Button
+                    android:id="@+id/bddt"
+                    style="@style/Button_Style_gone"
+                    android:layout_width="@dimen/button_width"
+                    android:layout_height="@dimen/button_height"
+                    android:layout_marginLeft="@dimen/button_marginLeft"
+                    android:drawableTop="@drawable/bddt"
+                    android:onClick="onClick"
+                    android:paddingTop="@dimen/button_drawablePadding"
+                    android:text="百度地图" />
+
+                <Button
+                    android:id="@+id/bdyy"
+                    style="@style/Button_Style_gone"
+                    android:layout_width="@dimen/button_width"
+                    android:layout_height="@dimen/button_height"
+                    android:layout_marginLeft="@dimen/button_marginLeft"
+                    android:drawableTop="@drawable/bdyy"
+                    android:onClick="onClick"
+                    android:paddingTop="@dimen/button_drawablePadding"
+                    android:text="百度音乐" />
+
+                <Button
+                    android:id="@+id/lrts"
+                    style="@style/Button_Style_gone"
+                    android:layout_width="@dimen/button_width"
+                    android:layout_height="@dimen/button_height"
+                    android:layout_marginLeft="@dimen/button_marginLeft"
+                    android:drawableTop="@drawable/lrts"
+                    android:onClick="onClick"
+                    android:paddingTop="@dimen/button_drawablePadding"
+                    android:text="懒人听书" />
+
+                <Button
+                    android:id="@+id/jddr"
+                    style="@style/Button_Style_gone"
+                    android:layout_width="@dimen/button_width"
+                    android:layout_height="@dimen/button_height"
+                    android:layout_marginLeft="@dimen/button_marginLeft"
+                    android:drawableTop="@drawable/jddr"
+                    android:onClick="onClick"
+                    android:paddingTop="@dimen/button_drawablePadding"
+                    android:text="酒店达人" />
+
+                <Button
+                    android:id="@+id/changxing"
+                    style="@style/Button_Style_gone"
+                    android:layout_width="@dimen/button_width"
+                    android:layout_height="@dimen/button_height"
+                    android:layout_marginLeft="@dimen/button_marginLeft"
+                    android:drawableTop="@drawable/changxing"
+                    android:onClick="onClick"
+                    android:paddingTop="@dimen/button_drawablePadding"
+                    android:text="畅行" />
+
+                <Button
+                    android:id="@+id/atmwz"
+                    style="@style/Button_Style_gone"
+                    android:layout_width="@dimen/button_width"
+                    android:layout_height="@dimen/button_height"
+                    android:layout_marginLeft="@dimen/button_marginLeft"
+                    android:drawableTop="@drawable/atmwz"
+                    android:onClick="onClick"
+                    android:paddingTop="@dimen/button_drawablePadding"
+                    android:text="ATM位置通" />
+            </LinearLayout>
+        </LinearLayout>
+    </HorizontalScrollView>
+
+</LinearLayout>
