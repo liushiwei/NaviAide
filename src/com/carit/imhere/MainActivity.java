@@ -114,12 +114,23 @@ public class MainActivity extends Activity {
                it.putExtra("hotkey", MapMode.FOOD);
                startActivity(it);
                break;
-           case R.id.coffee:
+           case R.id.cafe:
+               it = new Intent(getBaseContext(),MapMode.class);
+               it.putExtra("hotkey", MapMode.CAFE);
+               startActivity(it);
+               break;
+           case R.id.car_repair:
                it = new Intent(getBaseContext(),MapMode.class);
                it.putExtra("hotkey", MapMode.CAR_REPAIR);
                startActivity(it);
                break;
            case R.id.sport:
+               it = new Intent(getBaseContext(),MapMode.class);
+               it.putExtra("hotkey", MapMode.SPORT);
+               startActivity(it);
+               break;
+               
+           case R.id.car_wash:
                it = new Intent(getBaseContext(),MapMode.class);
                it.putExtra("hotkey", MapMode.CAR_WASH);
                startActivity(it);

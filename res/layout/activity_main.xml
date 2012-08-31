@@ -53,6 +53,17 @@
                     android:onClick="onClick"
                     android:paddingTop="@dimen/button_drawablePadding"
                     android:text="Food" />
+                
+                <Button
+                    android:id="@+id/car_repair"
+                    style="@style/Button_Style"
+                    android:layout_width="@dimen/button_width"
+                    android:layout_height="@dimen/button_height"
+                    android:layout_marginLeft="@dimen/button_marginLeft"
+                    android:drawableTop="@drawable/car_repair"
+                    android:onClick="onClick"
+                    android:paddingTop="@dimen/button_drawablePadding"
+                    android:text="Car Repair" />
 
                 <Button
                     android:id="@+id/gdcyh"
@@ -151,7 +162,7 @@
                     android:text="Sport" />
 
                 <Button
-                    android:id="@+id/coffee"
+                    android:id="@+id/cafe"
                     style="@style/Button_Style"
                     android:layout_width="@dimen/button_width"
                     android:layout_height="@dimen/button_height"
@@ -159,7 +170,18 @@
                     android:drawableTop="@drawable/coffee"
                     android:onClick="onClick"
                     android:paddingTop="@dimen/button_drawablePadding"
-                    android:text="coffee" />
+                    android:text="Cafe" />
+                
+                 <Button
+                    android:id="@+id/car_wash"
+                    style="@style/Button_Style"
+                    android:layout_width="@dimen/button_width"
+                    android:layout_height="@dimen/button_height"
+                    android:layout_marginLeft="@dimen/button_marginLeft"
+                    android:drawableTop="@drawable/car_wash"
+                    android:onClick="onClick"
+                    android:paddingTop="@dimen/button_drawablePadding"
+                    android:text="Car Wash" />
 
                 <Button
                     android:id="@+id/bddt"

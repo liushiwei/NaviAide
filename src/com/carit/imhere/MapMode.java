@@ -1,6 +1,8 @@
 
 package com.carit.imhere;
 
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -11,10 +13,12 @@ import android.app.PendingIntent.CanceledException;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.graphics.Bitmap;
+import android.graphics.Bitmap.CompressFormat;
+import android.graphics.Canvas;
 import android.graphics.drawable.Drawable;
 import android.location.Criteria;
 import android.location.Location;
-import android.location.LocationListener;
 import android.location.LocationManager;
 import android.net.Uri;
 import android.os.Bundle;
@@ -72,6 +76,10 @@ public class MapMode extends MapActivity implements OnClickListener,LocationCall
     public static final int BANK = 0x06;
 
     public static final int ATM = 0x07;
+    
+    public static final int SPORT = 0x08;
+    
+    public static final int CAFE = 0x09;
 
     public static final int HTTP_HTREAD_START = 0x101;
 
@@ -194,6 +202,24 @@ public class MapMode extends MapActivity implements OnClickListener,LocationCall
         List<Overlay> list = mMapView.getOverlays();
 
         list.add(positionOverlay);
+        
+        ImageButton ar = (ImageButton)findViewById(R.id.ImageButtonAR);
+        ar.setOnClickListener(new OnClickListener() {
+            
+            @Override
+            public void onClick(View v) {
+                try {
+                    Bitmap bm = Bitmap.createBitmap(800, 800, Bitmap.Config.ARGB_8888);
+                    Canvas canvas = new Canvas(bm);
+                    mMapView.draw(canvas);
+                    bm.compress(CompressFormat.JPEG, 95, new FileOutputStream("/sdcard/media/image.jpg"));
+                } catch (FileNotFoundException e) {
+                    // TODO Auto-generated catch block
+                    e.printStackTrace();
+                }
+                
+            }
+        });
 
         ToggleButton its = (ToggleButton) findViewById(R.id.ToggleButton_ITS);
         its.setOnCheckedChangeListener(new OnCheckedChangeListener() {
@@ -397,7 +423,13 @@ public class MapMode extends MapActivity implements OnClickListener,LocationCall
                 type = "car_repair";
                 break;
             case CAR_WASH:
-                type = "car_wash";
+                type = "car_dealer";
+                break;
+            case CAFE:
+                type = "cafe";
+                break;
+            case SPORT:
+                type = "sport";
                 break;
 
         }
@@ -502,6 +534,7 @@ public class MapMode extends MapActivity implements OnClickListener,LocationCall
                     Log.e("MapMode", directions.getStatus());
 
                     mHandler.obtainMessage(HTTP_HTREAD_COMPLETE, GET_PATH, 0).sendToTarget();
+                    
                 }
             });
             thread.start();
