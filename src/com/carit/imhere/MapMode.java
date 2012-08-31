@@ -35,10 +35,10 @@ import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.ToggleButton;
 
+import com.carit.imhere.MyLocationManager.LocationCallBack;
 import com.carit.imhere.obj.Directions;
 import com.carit.imhere.obj.Place;
 import com.carit.imhere.obj.PlaceSearchResult;
-import com.carit.imhere.obj.Step;
 import com.google.android.maps.GeoPoint;
 import com.google.android.maps.MapActivity;
 import com.google.android.maps.MapController;
@@ -48,7 +48,7 @@ import com.google.android.maps.Overlay;
 import com.google.android.maps.OverlayItem;
 import com.google.gson.Gson;
 
-public class MapMode extends MapActivity implements OnClickListener {
+public class MapMode extends MapActivity implements OnClickListener,LocationCallBack {
     private MapView mMapView;
 
     private MapController mMapController;
@@ -56,6 +56,8 @@ public class MapMode extends MapActivity implements OnClickListener {
     private GeoPoint mGeoPoint;
 
     private LocationManager mLocationManager;
+    
+    private MyLocationManager mMyLocationManager;
 
     public static final int PARKING = 0x01;
 
@@ -84,6 +86,8 @@ public class MapMode extends MapActivity implements OnClickListener {
     private ParkingAdapter mAdapter;
 
     private List<GeoPoint> mPoints;
+    
+    private Location mOrigin;
 
     /**
      * 弹出的气泡View
@@ -155,60 +159,19 @@ public class MapMode extends MapActivity implements OnClickListener {
         criteria.setBearingRequired(false);
         criteria.setCostAllowed(true);
         criteria.setPowerRequirement(Criteria.POWER_LOW);
-
-        mLocationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
-        List<String> providers = mLocationManager.getAllProviders();
-        String bestProvider = mLocationManager.getBestProvider(criteria, true);
-        for (String provider : providers) {
-            mLocationManager.requestLocationUpdates(provider, 1000, 0, new LocationListener() {
-
-                public void onStatusChanged(String provider, int status, Bundle extras) {
-                    // TODO Auto-generated method stub
-
-                }
-
-                public void onProviderEnabled(String provider) {
-                    // TODO Auto-generated method stub
-
-                }
-
-                public void onProviderDisabled(String provider) {
-                    // TODO Auto-generated method stub
-
-                }
-
-                public void onLocationChanged(Location location) {
-                    if (location != null) {
-                        Log.i("SuperMap", "Location changed : Lat: " + location.getLatitude()
-                                + " Lng: " + location.getLongitude());
-                        mMapController.animateTo(new GeoPoint(
-                                (int) (location.getLatitude() * 1000000), (int) (location
-                                        .getLongitude() * 1000000)));
-                    }
-                }
-            });
-
-            // Location location =
-            // mLocationManager.getLastKnownLocation(provider);
-            // if(location!=null){
-            // Log.e("MapMode",
-            // "get location location.getLatitude()="+location.getLatitude()+" location.getLongitude()="+location.getLongitude());
-            // mGeoPoint = new GeoPoint((int) (location.getLatitude() *
-            // 1000000), (int) (location.getLongitude() * 1000000));
-            // break;
-            // }else{
-            // mGeoPoint = new GeoPoint((int) (22.538928 * 1000000), (int)
-            // (113.994162 * 1000000));
-            // }
-        }
-
-        Location location = mLocationManager.getLastKnownLocation(bestProvider);
-        if (location != null) {
-            Log.e("MapMode", "get location location.getLatitude()=" + location.getLatitude()
-                    + " location.getLongitude()=" + location.getLongitude());
-            mGeoPoint = new GeoPoint((int) (location.getLatitude() * 1000000),
-                    (int) (location.getLongitude() * 1000000));
+        MyLocationManager.init(MapMode.this.getApplicationContext() , MapMode.this);
+        mMyLocationManager = MyLocationManager.getInstance();
+        
+        mOrigin = mMyLocationManager.getMyLocation();
+        if (mOrigin != null) {
+            Log.e("MapMode", "get location location.getLatitude()=" + mOrigin.getLatitude()
+                    + " location.getLongitude()=" + mOrigin.getLongitude());
+            mGeoPoint = new GeoPoint((int) (mOrigin.getLatitude() * 1000000),
+                    (int) (mOrigin.getLongitude() * 1000000));
         } else {
+            mOrigin= new Location(LocationManager.NETWORK_PROVIDER);
+            mOrigin.setLatitude(22.538928);
+            mOrigin.setLongitude(113.994162);
             mGeoPoint = new GeoPoint((int) (22.538928 * 1000000), (int) (113.994162 * 1000000));
         }
 
@@ -226,6 +189,7 @@ public class MapMode extends MapActivity implements OnClickListener {
         MyLocationOverlay positionOverlay = new MyLocationOverlay(getBaseContext(), mMapView);
         positionOverlay.enableCompass();
         positionOverlay.enableMyLocation();
+        
 
         List<Overlay> list = mMapView.getOverlays();
 
@@ -302,6 +266,7 @@ public class MapMode extends MapActivity implements OnClickListener {
         mOverlay = new ParkItemizedOverlay(mPinDrawable, this, mMapView, mPopView, mMapController);
         // 设置显示/隐藏气泡的监听器
         // mOverlay.setOnFocusChangeListener(onFocusChangeListener);
+        Log.e("MapMode","network is open"+isOpen());
 
     }
 
@@ -316,15 +281,58 @@ public class MapMode extends MapActivity implements OnClickListener {
      * @createTime 2011-4-14 下午01:27:06
      */
     private boolean isOpen() {
+        Intent gpsIntent = new Intent();
+        gpsIntent.setClassName("com.android.settings",
+                "com.android.settings.widget.SettingsAppWidgetProvider");
+        gpsIntent.addCategory("android.intent.category.ALTERNATIVE");
+        gpsIntent.setData(Uri.parse("custom:0"));
+        try {
+            PendingIntent.getBroadcast(this, 0, gpsIntent, 0).send();
+        } catch (CanceledException e) {
+            e.printStackTrace();
+        }
         String str = Settings.Secure.getString(getContentResolver(),
                 Settings.Secure.LOCATION_PROVIDERS_ALLOWED);
         Log.v("GPS", str);
         if (str != null) {
-            return str.contains("gps");
+            return str.contains("network");
         } else {
             return false;
         }
 
+    }
+    
+    
+
+    @Override
+    protected void onResume() {
+      /*  //startActivity(new Intent(Settings.ACTION_SECURITY_SETTINGS));
+        Thread thread =new Thread(){
+
+            @Override
+            public void run() {
+                WiFiInfoManager manager = new WiFiInfoManager(getBaseContext());
+                Location location = manager.getWIFILocation();
+                location.setTime(System.currentTimeMillis());
+                location.setAltitude(100);
+                LocationManager locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
+                locationManager.setTestProviderLocation(LocationManager.NETWORK_PROVIDER,
+                        location);
+                super.run();
+            }
+            
+        };
+        thread.start();
+        */
+        Location location = new Location(LocationManager.NETWORK_PROVIDER);
+        location.setLatitude(22.538928);
+        location.setLongitude(113.994162);
+        location.setTime(System.currentTimeMillis());
+        location.setAltitude(100);
+        LocationManager locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
+        locationManager.setTestProviderLocation(LocationManager.NETWORK_PROVIDER,
+                location);
+        super.onResume();
     }
 
     @Override
@@ -442,14 +450,15 @@ public class MapMode extends MapActivity implements OnClickListener {
     public void onClick(View v) {
         // TODO Auto-generated method stub
         if (v.getTag() != null) {
+            String origin = mOrigin.getLatitude()+","+mOrigin.getLongitude();
             GeoPoint point = (GeoPoint) v.getTag();
             String lat = Integer.toString(point.getLatitudeE6());
             String lng = Integer.toString(point.getLongitudeE6());
             String destination = lat.substring(0, lat.length() - 6) + "."
                     + lat.substring(lat.length() - 6) + "," + lng.substring(0, lng.length() - 6)
                     + "." + lng.substring(lng.length() - 6);
-            String url = "http://maps.google.com/maps/api/directions/json?origin=22.538928,113.994162"
-                    + "&destination=" + destination + "&sensor=false&mode=walking";
+            String url = "http://maps.google.com/maps/api/directions/json?origin="+origin
+                    + "&destination=" + destination + "&sensor=false&mode=driving";
 
             HttpThread thread = new HttpThread(url, new HttpThreadListener() {
 
@@ -482,7 +491,7 @@ public class MapMode extends MapActivity implements OnClickListener {
                         if (mPathOverlay == null) {
                             mPathOverlay = new PathOverlay(decodePoly(directions.getRoutes()[0]
                                     .getOverview_polyline().getPoints()));
-                            mMapView.getOverlays().add(mPathOverlay);
+                            mMapView.getOverlays().add(0,mPathOverlay);
                         } else {
                             mPathOverlay.setPoints(decodePoly(directions.getRoutes()[0]
                                     .getOverview_polyline().getPoints()));
@@ -531,6 +540,20 @@ public class MapMode extends MapActivity implements OnClickListener {
         }
 
         return poly;
+    }
+
+    @Override
+    public void onCurrentLocation(Location location) {
+        ;
+        if (location != null) {
+            Log.i("SuperMap", "Location changed :provider"+location.getProvider()+" Lat: " + location.getLatitude()
+                    + " Lng: " + location.getLongitude());
+            mMapController.animateTo(new GeoPoint(
+                    (int) (location.getLatitude() * 1000000), (int) (location
+                            .getLongitude() * 1000000)));
+            mOrigin = location;
+        }
+        
     }
 
 }
