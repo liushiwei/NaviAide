@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout android:orientation="horizontal" android:id="@id/LinearLayout01" android:background="@drawable/popup_pointer_button" android:focusable="true" android:clickable="true" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_x="37.0dip" android:layout_y="53.0dip"
+  xmlns:android="http://schemas.android.com/apk/res/android">
+    <LinearLayout android:layout_gravity="center" android:orientation="vertical" android:id="@id/LinearLayout02" android:paddingLeft="7.0sp" android:paddingRight="7.0sp" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginLeft="3.0dip" android:layout_marginRight="3.0dip">
+        <TextView android:textSize="16.0sp" android:textColor="#ff000000" android:layout_gravity="center_horizontal" android:id="@id/ImageButton01" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Name" android:singleLine="true" />
+        <TextView android:textSize="14.0sp" android:textColor="#ff464646" android:layout_gravity="center_horizontal" android:id="@id/TextView02" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Address" android:singleLine="true" />
+        <!-- <include android:id="@id/popup_place_linearlayout" layout="@layout/popup_place_linearlayout" /> -->
+    </LinearLayout>
+</LinearLayout>

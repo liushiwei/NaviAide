@@ -119,6 +119,8 @@ public class ParkItemizedOverlay extends ItemizedOverlay implements OnFocusChang
             
             mMapView.updateViewLayout(mPopView, params);
             mPopView.setVisibility(View.VISIBLE);
+        }else{
+            mPopView.setVisibility(View.GONE);
         }
     }
     

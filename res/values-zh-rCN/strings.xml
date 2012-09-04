@@ -3,5 +3,7 @@
 
     <string name="app_name">神游助手</string>
     <string name="menu_settings">Settings</string>
+    <string name="full ">全程约 </string>
+	<string name="take">耗时约 </string>
 
 </resources>

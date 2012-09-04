@@ -3,5 +3,6 @@
 
     <string name="app_name">Navi Aide</string>
     <string name="menu_settings">Settings</string>
-
+	<string name="full ">Full </string>
+	<string name="take">Take </string>
 </resources>
