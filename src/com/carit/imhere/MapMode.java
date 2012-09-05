@@ -117,6 +117,8 @@ public class MapMode extends MapActivity implements OnClickListener, LocationCal
     private Drawable mPathPinDrawable;
 
     private Drawable mStartPinDrawable;
+    
+    private Drawable mPassPinDrawable;
 
     private Handler mHandler = new Handler() {
 
@@ -285,6 +287,8 @@ public class MapMode extends MapActivity implements OnClickListener, LocationCal
         mOverlay = new ParkItemizedOverlay(mPinDrawable, this, mMapView, mPopView, mMapController);
         // 设置显示/隐藏气泡的监听器
         // mOverlay.setOnFocusChangeListener(onFocusChangeListener);
+        mPassPinDrawable =getResources().getDrawable(R.drawable.pin_purple);
+        list.add(new LongPressOverlay(this, mMapView,mMapController, mPassPinDrawable));
         Log.e("MapMode", "network is open" + isOpen());
 
     }
@@ -466,119 +470,9 @@ public class MapMode extends MapActivity implements OnClickListener, LocationCal
     @Override
     public void onClick(View v) {
         // TODO Auto-generated method stub
-        if(mPopNoBtnView!=null&&mPopNoBtnView.isShown()){
-            mPopNoBtnView.setVisibility(View.GONE);
-        }
+      
         if (v.getTag() != null) {
-            String origin = mOrigin.getLatitude() + "," + mOrigin.getLongitude();
-            mDestination = (GeoPoint) v.getTag();
-            String lat = Integer.toString(mDestination.getLatitudeE6());
-            String lng = Integer.toString(mDestination.getLongitudeE6());
-            String destination = lat.substring(0, lat.length() - 6) + "."
-                    + lat.substring(lat.length() - 6) + "," + lng.substring(0, lng.length() - 6)
-                    + "." + lng.substring(lng.length() - 6);
-            String url = "http://maps.google.com/maps/api/directions/json?origin=" + origin
-                    + "&destination=" + destination + "&sensor=false&mode=driving";
-
-            HttpThread thread = new HttpThread(url, new HttpThreadListener() {
-
-                public void start() {
-                    mHandler.obtainMessage(HTTP_HTREAD_START).sendToTarget();
-
-                }
-
-                public void netError(String error) {
-                    // TODO Auto-generated method stub
-
-                }
-
-                public void complete(String result) {
-
-                    Gson gson = new Gson();
-                    mDirections = gson.fromJson(result, Directions.class);
-                    if (mDirections != null && mDirections.getRoutes() != null) {
-                        /*
-                         * for (Step step :
-                         * directions.getRoutes()[0].getLegs()[0].getSteps()) {
-                         * GeoPoint point = new GeoPoint( (int)
-                         * (step.getStart_location().getLat() * 1000000), (int)
-                         * (step.getStart_location().getLng() * 1000000));
-                         * mPoints.add(point); point = new GeoPoint( (int)
-                         * (step.getEnd_location().getLat() * 1000000), (int)
-                         * (step .getEnd_location().getLng() * 1000000));
-                         * mPoints.add(point); }
-                         */
-                        List<GeoPoint> points = decodePoly(mDirections.getRoutes()[0]
-                                .getOverview_polyline().getPoints());
-                        points.add(0, new GeoPoint((int) (mOrigin.getLatitude() * 1E6),
-                                (int) (mOrigin.getLongitude() * 1E6)));
-                        points.add(mDestination);
-
-                        if (mPathOverlay == null) {
-
-                            mPathPinDrawable = getResources().getDrawable(R.drawable.pin_orange);
-                            mPathPinDrawable.setBounds(0, 0, mPathPinDrawable.getIntrinsicWidth(),
-                                    mPathPinDrawable.getIntrinsicHeight());
-                            mStartPinDrawable = getResources().getDrawable(
-                                    R.drawable.icon_nav_start);
-                            mStartPinDrawable.setBounds(0 - mStartPinDrawable.getIntrinsicWidth() / 2, 0 - mStartPinDrawable.getIntrinsicHeight(), 
-                                    mStartPinDrawable.getIntrinsicWidth() / 2, 0);
-                            mPathOverlay = new PathOverlay(points, mMapView, mPopNoBtnView,mMapController, mPathPinDrawable);
-
-                            OverlayItem overlayItem = new OverlayItem(points.get(0),
-                                    getString(R.string.full)
-                                            + mDirections.getRoutes()[0].getLegs()[0].getDistance()
-                                                    .getText(), getString(R.string.take)
-                                            + mDirections.getRoutes()[0].getLegs()[0].getDuration()
-                                                    .getText());
-                            overlayItem.setMarker(mStartPinDrawable);
-                            mPathOverlay.addOverlay(overlayItem);
-                            // OverlayItem overlayItem=null;
-                            for (Step step : mDirections.getRoutes()[0].getLegs()[0].getSteps()) {
-                                overlayItem = new OverlayItem(new GeoPoint((int) (step
-                                        .getEnd_location().getLat() * 1E6), (int) (step
-                                        .getEnd_location().getLng() * 1E6)),
-                                        step.getHtml_instructions(), step
-                                                        .getDistance().getText()
-                                                + "-"
-                                                + step
-                                                        .getDuration().getText());
-                                mPathOverlay.addOverlay(overlayItem);
-                            }
-
-                            mMapView.getOverlays().add( mPathOverlay);
-                        } else {
-                            mPathOverlay.setPoints(decodePoly(mDirections.getRoutes()[0]
-                                    .getOverview_polyline().getPoints()));
-                            mPathOverlay.getOverlays().clear();
-                            OverlayItem overlayItem = new OverlayItem(points.get(0),
-                                    getString(R.string.full)
-                                            + mDirections.getRoutes()[0].getLegs()[0].getDistance()
-                                                    .getText(), getString(R.string.take)
-                                            + mDirections.getRoutes()[0].getLegs()[0].getDuration()
-                                                    .getText());
-                            overlayItem.setMarker(mStartPinDrawable);
-                            mPathOverlay.addOverlay(overlayItem);
-                            for (Step step : mDirections.getRoutes()[0].getLegs()[0].getSteps()) {
-                                overlayItem = new OverlayItem(new GeoPoint((int) (step
-                                        .getStart_location().getLat() * 1E6), (int) (step
-                                        .getStart_location().getLng() * 1E6)),
-                                        step.getHtml_instructions(),step.getDistance().getText()
-                                                + "-"
-                                                + step.getDuration().getText());
-                                mPathOverlay.addOverlay(overlayItem);
-                            }
-                        }
-                        mMapController.animateTo(points.get(0));
-
-                        Log.e("MapMode", mDirections.getStatus());
-                    }
-
-                    mHandler.obtainMessage(HTTP_HTREAD_COMPLETE, GET_PATH, 0).sendToTarget();
-
-                }
-            });
-            thread.start();
+           getPath( (GeoPoint) v.getTag());
         } else {
             switch (v.getId()) {
                 case R.id.hide:
@@ -651,6 +545,122 @@ public class MapMode extends MapActivity implements OnClickListener, LocationCal
             mOrigin = location;
         }
 
+    }
+    
+    public void getPath(GeoPoint point){
+        if(mPopNoBtnView!=null&&mPopNoBtnView.isShown()){
+            mPopNoBtnView.setVisibility(View.GONE);
+        }
+        String origin = mOrigin.getLatitude() + "," + mOrigin.getLongitude();
+        mDestination = point;
+        String lat = Integer.toString(mDestination.getLatitudeE6());
+        String lng = Integer.toString(mDestination.getLongitudeE6());
+        String destination = lat.substring(0, lat.length() - 6) + "."
+                + lat.substring(lat.length() - 6) + "," + lng.substring(0, lng.length() - 6)
+                + "." + lng.substring(lng.length() - 6);
+        String url = "http://maps.google.com/maps/api/directions/json?origin=" + origin
+                + "&destination=" + destination + "&sensor=false&mode=driving";
+
+        HttpThread thread = new HttpThread(url, new HttpThreadListener() {
+
+            public void start() {
+                mHandler.obtainMessage(HTTP_HTREAD_START).sendToTarget();
+
+            }
+
+            public void netError(String error) {
+                // TODO Auto-generated method stub
+
+            }
+
+            public void complete(String result) {
+
+                Gson gson = new Gson();
+                mDirections = gson.fromJson(result, Directions.class);
+                if (mDirections != null && mDirections.getRoutes() != null) {
+                    /*
+                     * for (Step step :
+                     * directions.getRoutes()[0].getLegs()[0].getSteps()) {
+                     * GeoPoint point = new GeoPoint( (int)
+                     * (step.getStart_location().getLat() * 1000000), (int)
+                     * (step.getStart_location().getLng() * 1000000));
+                     * mPoints.add(point); point = new GeoPoint( (int)
+                     * (step.getEnd_location().getLat() * 1000000), (int)
+                     * (step .getEnd_location().getLng() * 1000000));
+                     * mPoints.add(point); }
+                     */
+                    List<GeoPoint> points = decodePoly(mDirections.getRoutes()[0]
+                            .getOverview_polyline().getPoints());
+                    points.add(0, new GeoPoint((int) (mOrigin.getLatitude() * 1E6),
+                            (int) (mOrigin.getLongitude() * 1E6)));
+                    points.add(mDestination);
+
+                    if (mPathOverlay == null) {
+
+                        mPathPinDrawable = getResources().getDrawable(R.drawable.pin_orange);
+                        mPathPinDrawable.setBounds(0, 0, mPathPinDrawable.getIntrinsicWidth(),
+                                mPathPinDrawable.getIntrinsicHeight());
+                        mStartPinDrawable = getResources().getDrawable(
+                                R.drawable.icon_nav_start);
+                        mStartPinDrawable.setBounds(0 - mStartPinDrawable.getIntrinsicWidth() / 2, 0 - mStartPinDrawable.getIntrinsicHeight(), 
+                                mStartPinDrawable.getIntrinsicWidth() / 2, 0);
+                        mPathOverlay = new PathOverlay(points, mMapView, mPopNoBtnView,mMapController, mPathPinDrawable);
+
+                        OverlayItem overlayItem = new OverlayItem(points.get(0),
+                                getString(R.string.full)
+                                        + mDirections.getRoutes()[0].getLegs()[0].getDistance()
+                                                .getText(), getString(R.string.take)
+                                        + mDirections.getRoutes()[0].getLegs()[0].getDuration()
+                                                .getText());
+                        overlayItem.setMarker(mStartPinDrawable);
+                        mPathOverlay.addOverlay(overlayItem);
+                        // OverlayItem overlayItem=null;
+                        for (Step step : mDirections.getRoutes()[0].getLegs()[0].getSteps()) {
+                            overlayItem = new OverlayItem(new GeoPoint((int) (step
+                                    .getEnd_location().getLat() * 1E6), (int) (step
+                                    .getEnd_location().getLng() * 1E6)),
+                                    step.getHtml_instructions(), step
+                                                    .getDistance().getText()
+                                            + "-"
+                                            + step
+                                                    .getDuration().getText());
+                            mPathOverlay.addOverlay(overlayItem);
+                        }
+
+                        mMapView.getOverlays().add( mPathOverlay);
+                    } else {
+                        mPathOverlay.setPoints(decodePoly(mDirections.getRoutes()[0]
+                                .getOverview_polyline().getPoints()));
+                        mPathOverlay.getOverlays().clear();
+                        OverlayItem overlayItem = new OverlayItem(points.get(0),
+                                getString(R.string.full)
+                                        + mDirections.getRoutes()[0].getLegs()[0].getDistance()
+                                                .getText(), getString(R.string.take)
+                                        + mDirections.getRoutes()[0].getLegs()[0].getDuration()
+                                                .getText());
+                        overlayItem.setMarker(mStartPinDrawable);
+                        mPathOverlay.addOverlay(overlayItem);
+                        for (Step step : mDirections.getRoutes()[0].getLegs()[0].getSteps()) {
+                            overlayItem = new OverlayItem(new GeoPoint((int) (step
+                                    .getStart_location().getLat() * 1E6), (int) (step
+                                    .getStart_location().getLng() * 1E6)),
+                                    step.getHtml_instructions(),step.getDistance().getText()
+                                            + "-"
+                                            + step.getDuration().getText());
+                            mPathOverlay.addOverlay(overlayItem);
+                        }
+                    }
+                    mMapController.animateTo(points.get(0));
+
+                    Log.e("MapMode", mDirections.getStatus());
+                }
+
+                mHandler.obtainMessage(HTTP_HTREAD_COMPLETE, GET_PATH, 0).sendToTarget();
+
+            }
+        });
+        thread.start();
+    
     }
 
 }

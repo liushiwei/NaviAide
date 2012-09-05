@@ -79,6 +79,7 @@ public class PathOverlay extends ItemizedOverlay implements OnFocusChangeListene
         mPopView = popView;
         mMapView = mapView;
         mMapCtrl = mapCtrl;
+        populate(); // Add this
     }
 
     /*public PathOverlay(final Directions directions,Drawable pin) {

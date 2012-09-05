@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@id/LinearLayout01"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:layout_x="37.0dip"
+    android:layout_y="53.0dip"
+    android:background="@drawable/popup_pointer_button"
+    android:clickable="true"
+    android:focusable="true"
+    android:orientation="horizontal" >
+
+    <ImageButton
+        android:id="@+id/btn_delete"
+        android:layout_width="wrap_content"
+        android:layout_height="fill_parent"
+        android:background="@android:color/transparent"
+        android:clickable="true"
+        android:focusable="true"
+        android:src="@drawable/pop_btn_delete" />
+
+    <ImageButton
+        android:id="@+id/btn_pass"
+        android:layout_width="wrap_content"
+        android:layout_height="fill_parent"
+        android:background="@android:color/transparent"
+        android:clickable="true"
+        android:focusable="true"
+        android:src="@drawable/pop_btn_pass" />
+
+    <ImageButton
+        android:id="@+id/btn_end"
+        android:layout_width="wrap_content"
+        android:layout_height="fill_parent"
+        android:background="@android:color/transparent"
+        android:clickable="true"
+        android:focusable="true"
+        android:src="@drawable/pop_btn_end" />
+
+</LinearLayout>
