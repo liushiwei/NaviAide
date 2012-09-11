@@ -71,7 +71,12 @@ public class ParkItemizedOverlay extends ItemizedOverlay implements OnFocusChang
     public void removeOverlay(int location) {
         overlays.remove(location);
     }
-
+    
+    public void cleanOverlayItem() {
+        overlays.clear();
+        populate();
+    }
+    
     @Override
     public boolean onTap(GeoPoint p, MapView mapView) {
         return super.onTap(p, mapView);

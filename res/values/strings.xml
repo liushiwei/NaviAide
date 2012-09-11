@@ -21,5 +21,7 @@
     <string name="clean">清除</string>
     <string name="setup">设置</string>
     <string name="sure_clean">确定要清除数据吗?</string>
+    <string name="key_word">搜索内容</string>
+    <string name="one_km">1公里范围内</string>
 
 </resources>

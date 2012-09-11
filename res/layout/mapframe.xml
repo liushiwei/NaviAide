@@ -16,7 +16,7 @@
         android:gravity="center_vertical"
         android:orientation="horizontal" >
 
-        <TextView
+        <EditText
             android:id="@id/TextViewSearch"
             android:layout_width="fill_parent"
             android:layout_height="36.0dip"
@@ -28,8 +28,8 @@
             android:clickable="true"
             android:drawableLeft="@drawable/direct_mapsearch_icon"
             android:gravity="center_vertical"
+            android:hint="@string/key_word"
             android:singleLine="true"
-            android:text="地点,公交,地铁..."
             android:textColor="#ff6d6d6d"
             android:textSize="16.0sp" />
 
@@ -40,7 +40,8 @@
             android:layout_marginLeft="3.0dip"
             android:layout_marginRight="3.0dip"
             android:background="@android:color/transparent"
-            android:src="@drawable/btn_map_nav" />
+            android:src="@drawable/btn_map_nav"
+            android:visibility="gone" />
 
         <ImageButton
             android:id="@id/ImageButtonHotkey"
@@ -84,39 +85,100 @@
         android:layout_height="380dp"
         android:layout_alignParentLeft="true"
         android:layout_below="@id/LinearLayoutMapSearch"
-        android:paddingLeft="4.0dip" android:visibility="gone" android:paddingBottom="5dp" android:background="@drawable/btn_poi_detail_normal" android:orientation="vertical">
-		<LinearLayout android:layout_width="match_parent"
-            android:layout_height="wrap_content" android:orientation="horizontal">
-		    
-		<TextView android:layout_width="wrap_content"
-            android:layout_height="wrap_content" android:layout_weight="1" android:text="Parking" android:textSize="19sp"/>
-		<Button android:id="@+id/hide" android:layout_width="wrap_content"
-            android:layout_height="wrap_content" android:background="@drawable/arrow_left"/>
-		</LinearLayout>
+        android:background="@drawable/btn_poi_detail_normal"
+        android:orientation="vertical"
+        android:paddingBottom="5dp"
+        android:paddingLeft="4.0dip"
+        android:visibility="gone" >
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal" >
+
+            <TextView
+                android:layout_width="0dip"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="@string/one_km"
+                android:textSize="19sp" 
+                android:layout_marginLeft="20dp"/>
+
+            <Button
+                android:id="@+id/hide"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:background="@drawable/arrow_left" />
+        </LinearLayout>
+
         <ListView
             android:id="@+id/placeSearchList"
             android:layout_width="wrap_content"
-            android:layout_height="wrap_content" android:paddingLeft="4.0dip">
+            android:layout_height="wrap_content"
+            android:paddingLeft="4.0dip" >
         </ListView>
     </LinearLayout>
-    <Button android:id="@+id/show" android:layout_width="wrap_content" android:layout_alignParentLeft="true" android:layout_centerVertical="true"
-            android:layout_height="wrap_content" android:background="@drawable/arrow_right" android:visibility="gone"/>
-    <LinearLayout android:id="@+id/trackControl" android:layout_width="wrap_content" android:layout_alignParentLeft="true" android:layout_centerVertical="true"
-            android:layout_height="wrap_content" android:visibility="gone" android:orientation="vertical">
-        <ImageButton android:id="@+id/pause" android:layout_width="wrap_content"  android:layout_height="wrap_content" android:src="@android:drawable/ic_media_pause"/>
-        <ImageButton android:id="@+id/play" android:layout_width="wrap_content"  android:layout_height="wrap_content" android:src="@android:drawable/ic_media_play"/>
-        </LinearLayout>
-    
-	<LinearLayout android:layout_width="wrap_content"
-        android:layout_height="wrap_content" android:layout_alignParentRight="true"
-        android:layout_alignParentBottom="true" android:paddingBottom="10dp" android:visibility="gone">
-        <ImageButton android:layout_width="wrap_content"
-        android:layout_height="wrap_content" android:src="@drawable/btn_prev_poiresult" android:background="@android:color/transparent"/>
-        <TextView android:id="@+id/instructions" android:layout_width="wrap_content"
-        android:layout_height="wrap_content" android:layout_weight="1" android:background="@drawable/navi_text_bg" android:visibility="gone"/>
-	    <ImageButton android:layout_width="wrap_content"
-        android:layout_height="wrap_content" android:src="@drawable/btn_next_poiresult" android:background="@android:color/transparent"/>
-	</LinearLayout>
+
+    <Button
+        android:id="@+id/show"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentLeft="true"
+        android:layout_centerVertical="true"
+        android:background="@drawable/arrow_right"
+        android:visibility="gone" />
+
+    <LinearLayout
+        android:id="@+id/trackControl"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentLeft="true"
+        android:layout_centerVertical="true"
+        android:orientation="vertical"
+        android:visibility="gone" >
+
+        <ImageButton
+            android:id="@+id/pause"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:src="@android:drawable/ic_media_pause" />
+
+        <ImageButton
+            android:id="@+id/play"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:src="@android:drawable/ic_media_play" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:layout_alignParentRight="true"
+        android:paddingBottom="10dp"
+        android:visibility="gone" >
+
+        <ImageButton
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:background="@android:color/transparent"
+            android:src="@drawable/btn_prev_poiresult" />
+
+        <TextView
+            android:id="@+id/instructions"
+            android:layout_width="0dip"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:background="@drawable/navi_text_bg"
+            android:visibility="gone" />
+
+        <ImageButton
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:background="@android:color/transparent"
+            android:src="@drawable/btn_next_poiresult" />
+    </LinearLayout>
+
     <LinearLayout
         android:id="@id/ToggleButton_ITSlayout"
         android:layout_width="wrap_content"
@@ -211,7 +273,7 @@
             android:layout_gravity="bottom|center"
             android:layout_marginBottom="60.0dip"
             android:src="@drawable/logo" />
-    </FrameLayout>
+    </FrameLayout>
     -->
 
 </RelativeLayout>

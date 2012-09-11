@@ -34,6 +34,7 @@ import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemClickListener;
 import android.widget.CompoundButton;
 import android.widget.CompoundButton.OnCheckedChangeListener;
+import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.ListView;
 import android.widget.TextView;
@@ -108,6 +109,8 @@ public class MapMode extends MapActivity implements OnClickListener, LocationCal
     private Location mOrigin;
 
     private GeoPoint mDestination;
+    
+    private String mtypes ;
 
     /**
      * 弹出的气泡View
@@ -241,26 +244,7 @@ public class MapMode extends MapActivity implements OnClickListener, LocationCal
         findViewById(R.id.ImageButtonAR).setOnClickListener(this);
         findViewById(R.id.show).setOnClickListener(this);
         findViewById(R.id.hide).setOnClickListener(this);
-        // ImageButton hotkey = (ImageButton)
-        // findViewById(R.id.ImageButtonHotkey);
-        // hotkey.setOnClickListener(new OnClickListener() {
-        //
-        // public void onClick(View v) {
-        // AlertDialog.Builder builder;
-        // AlertDialog alertDialog;
-        // Context mContext = getApplicationContext();
-        // LayoutInflater inflater = (LayoutInflater) mContext
-        // .getSystemService(LAYOUT_INFLATER_SERVICE);
-        // View layout = inflater.inflate(R.layout.hotkey_layout,
-        // (ViewGroup) findViewById(R.id.hotkey));
-        //
-        // builder = new AlertDialog.Builder(mContext);
-        // builder.setView(layout);
-        // alertDialog = builder.create();
-        // alertDialog.show();
-        // }
-        // });
-        Intent intent = getIntent();
+        findViewById(R.id.ImageButtonHotkey).setOnClickListener(this);
 
         ListView listView = (ListView) findViewById(R.id.placeSearchList);
         mAdapter = new ParkingAdapter(getBaseContext(), mPlaces, R.layout.place_list_item);
@@ -311,7 +295,7 @@ public class MapMode extends MapActivity implements OnClickListener, LocationCal
         mPassPinDrawable = getResources().getDrawable(R.drawable.pin_purple);
         list.add(new LongPressOverlay(this, mMapView, mMapController, mPassPinDrawable));
         Log.e("MapMode", "network is open" + isOpen());
-        processIntent(intent);
+        processIntent(getIntent());
 
     }
 
@@ -421,32 +405,32 @@ public class MapMode extends MapActivity implements OnClickListener, LocationCal
     }
 
     private void processIntent(Intent intent) {
-        String type = null;
+        mtypes = null;
         int key = intent.getIntExtra("hotkey", -1);
         switch (key) {
             case PARKING:
-                type = "parking";
+                mtypes = "parking";
                 break;
             case GAS_STATION:
-                type = "gas_station";
+                mtypes = "gas_station";
                 break;
             case FOOD:
-                type = "food";
+                mtypes = "food";
                 break;
             case BANK:
-                type = "bank";
+                mtypes = "bank";
                 break;
             case CAR_REPAIR:
-                type = "car_repair";
+                mtypes = "car_repair";
                 break;
             case CAR_DEALER:
-                type = "car_dealer";
+                mtypes = "car_dealer";
                 break;
             case CAFE:
-                type = "cafe";
+                mtypes = "cafe";
                 break;
             case SPORT:
-                type = "sport";
+                mtypes = "sport";
                 break;
             case CAR_ROUTE:
                 findViewById(R.id.trackControl).setVisibility(View.VISIBLE);
@@ -456,51 +440,62 @@ public class MapMode extends MapActivity implements OnClickListener, LocationCal
                 break;
 
         }
-        if (type != null) {
-            String url = "https://maps.googleapis.com/maps/api/place/search/json?location="
-                    + "22.538928,113.994162" + "&radius=" + mRadius + "&types=" + type
-                    + "&sensor=true&key=AIzaSyDbYqd7KvrZhqffpw4YfMsDreKgk9MuGJM&language=zh-CN";
-            HttpThread thread = new HttpThread(url, new HttpThreadListener() {
-
-                public void start() {
-                    mHandler.obtainMessage(HTTP_HTREAD_START).sendToTarget();
-
-                }
-
-                public void netError(String error) {
-                    // TODO Auto-generated method stub
-
-                }
-
-                public void complete(String result) {
-
-                    Gson gson = new Gson();
-                    mPlaces = gson.fromJson(result, PlaceSearchResult.class);
-                    if (mPlaces.getResults() != null) {
-                        if (mPoints != null)
-                            mPoints.clear();
-                        else
-                            mPoints = new ArrayList<GeoPoint>();
-
-                        for (Place place : mPlaces.getResults()) {
-                            GeoPoint point = new GeoPoint((int) (place.getGeometry().getLocation()
-                                    .getLat() * 1000000), (int) (place.getGeometry().getLocation()
-                                    .getLng() * 1000000));
-                            mPoints.add(point);
-                            OverlayItem overlayItem = new OverlayItem(point, place.getName(),
-                                    place.getVicinity());
-                            mOverlay.addOverlay(overlayItem);
-
-                        }
-                    }
-
-                    Log.e("MapMode", mPlaces.getStatus());
-                    mMapView.getOverlays().add(mOverlay);
-                    mHandler.obtainMessage(HTTP_HTREAD_COMPLETE).sendToTarget();
-                }
-            });
-            thread.start();
+        if (mtypes != null) {
+            queryPoi(null,mtypes);
         }
+    }
+    
+    private void queryPoi(String keyWord,String type){
+        String url = null;
+        if(keyWord==null)
+        url = "https://maps.googleapis.com/maps/api/place/search/json?location="
+                + "22.538928,113.994162" + "&radius=" + mRadius + "&types=" + type
+                + "&sensor=true&key=AIzaSyDbYqd7KvrZhqffpw4YfMsDreKgk9MuGJM&language=zh-CN";
+        else
+            url = "https://maps.googleapis.com/maps/api/place/search/json?location="
+                    + "22.538928,113.994162" + "&radius=" + mRadius + "&types=" + type+"&name="+keyWord
+                    + "&sensor=true&key=AIzaSyDbYqd7KvrZhqffpw4YfMsDreKgk9MuGJM&language=zh-CN";
+        HttpThread thread = new HttpThread(url, new HttpThreadListener() {
+
+            public void start() {
+                mHandler.obtainMessage(HTTP_HTREAD_START).sendToTarget();
+
+            }
+
+            public void netError(String error) {
+                // TODO Auto-generated method stub
+
+            }
+
+            public void complete(String result) {
+
+                Gson gson = new Gson();
+                mPlaces = gson.fromJson(result, PlaceSearchResult.class);
+                if (mPlaces.getResults() != null) {
+                    if (mPoints != null)
+                        mPoints.clear();
+                    else
+                        mPoints = new ArrayList<GeoPoint>();
+                    mOverlay.cleanOverlayItem();
+                    for (Place place : mPlaces.getResults()) {
+                        GeoPoint point = new GeoPoint((int) (place.getGeometry().getLocation()
+                                .getLat() * 1000000), (int) (place.getGeometry().getLocation()
+                                .getLng() * 1000000));
+                        mPoints.add(point);
+                        OverlayItem overlayItem = new OverlayItem(point, place.getName(),
+                                place.getVicinity());
+                        mOverlay.addOverlay(overlayItem);
+
+                    }
+                }
+
+                Log.e("MapMode", mPlaces.getStatus());
+                if(!mMapView.getOverlays().contains(mOverlay))
+                mMapView.getOverlays().add(mOverlay);
+                mHandler.obtainMessage(HTTP_HTREAD_COMPLETE).sendToTarget();
+            }
+        });
+        thread.start();
     }
 
     @Override
@@ -537,6 +532,11 @@ public class MapMode extends MapActivity implements OnClickListener, LocationCal
                     break;
                 case R.id.play:
                     mIsPause = false;
+                    break;
+                case R.id.ImageButtonHotkey:
+                    EditText text = (EditText)findViewById(R.id.TextViewSearch);
+                    String keyWord = text.getText().toString().trim().replaceAll(" ", "|");
+                    queryPoi(keyWord, mtypes);
                     break;
             }
         }
