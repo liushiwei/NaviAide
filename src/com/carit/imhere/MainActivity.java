@@ -130,9 +130,13 @@ public class MainActivity extends Activity {
                startActivity(it);
                break;
                
-           case R.id.car_wash:
+           case R.id.car_dealer:
                it = new Intent(getBaseContext(),MapMode.class);
-               it.putExtra("hotkey", MapMode.CAR_WASH);
+               it.putExtra("hotkey", MapMode.CAR_DEALER);
+               startActivity(it);
+               break;
+           case R.id.car_route:
+               it = new Intent(getBaseContext(),RouteActivity.class);
                startActivity(it);
                break;
         }

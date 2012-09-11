@@ -3,12 +3,16 @@ package com.carit.imhere;
  * @author rongfzh
  * @version 1.0.0  
  */
+import android.content.ContentValues;
 import android.content.Context;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
+import android.net.Uri;
 import android.os.Bundle;
 import android.util.Log;
+
+import com.carit.imhere.provider.LocationTable;
 
 /**
  * @author why
@@ -91,6 +95,7 @@ public class MyLocationManager {
 		public void onLocationChanged(Location location) {
 			Log.d(TAG, "onLocationChanged");
 			updateLocation(location);
+			saveLocation(location);
 		}
 	};
 
@@ -113,5 +118,13 @@ public class MyLocationManager {
 		Log.d(TAG, "destoryLocationManager");
 		gpsLocationManager.removeUpdates(locationListener);
 		networkLocationManager.removeUpdates(locationListener);
+	}
+	
+	private void saveLocation(Location location){
+	    ContentValues values = new ContentValues();
+	    values.put(LocationTable.TIME, location.getTime());
+	    values.put(LocationTable.LAT, location.getLatitude());
+	    values.put(LocationTable.LNG, location.getLongitude());
+	    Uri uri = mContext.getContentResolver().insert(LocationTable.CONTENT_URI, values);
 	}
 }

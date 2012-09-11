@@ -101,6 +101,12 @@
     </LinearLayout>
     <Button android:id="@+id/show" android:layout_width="wrap_content" android:layout_alignParentLeft="true" android:layout_centerVertical="true"
             android:layout_height="wrap_content" android:background="@drawable/arrow_right" android:visibility="gone"/>
+    <LinearLayout android:id="@+id/trackControl" android:layout_width="wrap_content" android:layout_alignParentLeft="true" android:layout_centerVertical="true"
+            android:layout_height="wrap_content" android:visibility="gone" android:orientation="vertical">
+        <ImageButton android:id="@+id/pause" android:layout_width="wrap_content"  android:layout_height="wrap_content" android:src="@android:drawable/ic_media_pause"/>
+        <ImageButton android:id="@+id/play" android:layout_width="wrap_content"  android:layout_height="wrap_content" android:src="@android:drawable/ic_media_play"/>
+        </LinearLayout>
+    
 	<LinearLayout android:layout_width="wrap_content"
         android:layout_height="wrap_content" android:layout_alignParentRight="true"
         android:layout_alignParentBottom="true" android:paddingBottom="10dp" android:visibility="gone">

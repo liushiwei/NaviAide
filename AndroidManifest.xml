@@ -23,6 +23,10 @@
         android:label="@string/app_name" >
         <uses-library android:name="com.google.android.maps" />
 
+        <provider
+            android:name="com.carit.imhere.provider.LocationProvider"
+            android:authorities="com.carit.provider.Location" />
+
         <activity
             android:name=".IMHereActivity"
             android:label="@string/app_name" >
@@ -30,11 +34,14 @@
         <activity
             android:name=".MapMode"
             android:theme="@android:style/Theme.Light.NoTitleBar" >
-            
+        </activity>
+        <activity
+            android:name=".RouteActivity"
+            android:theme="@android:style/Theme.Light.NoTitleBar" >
         </activity>
         <activity
             android:name=".MainActivity"
-            android:theme="@android:style/Theme.Light.NoTitleBar">
+            android:theme="@android:style/Theme.Light.NoTitleBar" >
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 

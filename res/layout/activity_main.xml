@@ -30,7 +30,7 @@
                     android:drawableTop="@drawable/parking"
                     android:onClick="onClick"
                     android:paddingTop="@dimen/button_drawablePadding"
-                    android:text="Parking" />
+                    android:text="@string/parking" />
 
                 <Button
                     android:id="@+id/gas_station"
@@ -41,7 +41,7 @@
                     android:drawableTop="@drawable/gas"
                     android:onClick="onClick"
                     android:paddingTop="@dimen/button_drawablePadding"
-                    android:text="Gas Station" />
+                    android:text="@string/gas_station" />
 
                 <Button
                     android:id="@+id/food"
@@ -52,7 +52,7 @@
                     android:drawableTop="@drawable/food"
                     android:onClick="onClick"
                     android:paddingTop="@dimen/button_drawablePadding"
-                    android:text="Food" />
+                    android:text="@string/food" />
                 
                 <Button
                     android:id="@+id/car_repair"
@@ -63,7 +63,7 @@
                     android:drawableTop="@drawable/car_repair"
                     android:onClick="onClick"
                     android:paddingTop="@dimen/button_drawablePadding"
-                    android:text="Car Repair" />
+                    android:text="@string/car_repair" />
 
                 <Button
                     android:id="@+id/gdcyh"
@@ -148,8 +148,20 @@
                     android:drawableTop="@drawable/bank"
                     android:onClick="onClick"
                     android:paddingTop="@dimen/button_drawablePadding"
-                    android:text="Bank" />
+                    android:text="@string/bank" />
 
+                 <Button
+                    android:id="@+id/car_dealer"
+                    style="@style/Button_Style"
+                    android:layout_width="@dimen/button_width"
+                    android:layout_height="@dimen/button_height"
+                    android:layout_marginLeft="@dimen/button_marginLeft"
+                    android:drawableTop="@drawable/car_wash"
+                    android:onClick="onClick"
+                    android:paddingTop="@dimen/button_drawablePadding"
+                    android:text="@string/car_dealer" 
+                    />
+                 
                 <Button
                     android:id="@+id/sport"
                     style="@style/Button_Style"
@@ -159,7 +171,8 @@
                     android:drawableTop="@drawable/sport"
                     android:onClick="onClick"
                     android:paddingTop="@dimen/button_drawablePadding"
-                    android:text="Sport" />
+                    android:text="@string/sport" 
+                    android:visibility="gone"/>
 
                 <Button
                     android:id="@+id/cafe"
@@ -170,7 +183,19 @@
                     android:drawableTop="@drawable/coffee"
                     android:onClick="onClick"
                     android:paddingTop="@dimen/button_drawablePadding"
-                    android:text="Cafe" />
+                    android:text="@string/cafe" />
+                
+                <Button
+                    android:id="@+id/car_route"
+                    style="@style/Button_Style"
+                    android:layout_width="@dimen/button_width"
+                    android:layout_height="@dimen/button_height"
+                    android:layout_marginLeft="@dimen/button_marginLeft"
+                    android:drawableTop="@drawable/route"
+                    android:onClick="onClick"
+                    android:paddingTop="@dimen/button_drawablePadding"
+                    android:text="@string/car_route" 
+                    />
                 
                  <Button
                     android:id="@+id/car_wash"
@@ -181,7 +206,8 @@
                     android:drawableTop="@drawable/car_wash"
                     android:onClick="onClick"
                     android:paddingTop="@dimen/button_drawablePadding"
-                    android:text="Car Wash" />
+                    android:text="Car Wash" 
+                    android:visibility="gone"/>
 
                 <Button
                     android:id="@+id/bddt"
