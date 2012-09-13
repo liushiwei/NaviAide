@@ -1,6 +1,8 @@
 
 package com.carit.imhere;
 
+import java.io.UnsupportedEncodingException;
+import java.net.URLEncoder;
 import java.security.KeyStore;
 
 import org.apache.http.HttpResponse;
@@ -43,6 +45,7 @@ public class HttpThread extends Thread {
     @Override
     public void run() {
         listener.start();
+        
         HttpGet get = new HttpGet(url);
         String strResult = "";
         try {
@@ -50,7 +53,8 @@ public class HttpThread extends Thread {
             HttpConnectionParams.setConnectionTimeout(httpParameters, 20000);
             HttpConnectionParams.setSoTimeout(httpParameters, 20000);
             HttpClient httpClient = getNewHttpClient();
-            
+            get.addHeader("Accept-Language", "zh-CN,zh;q=0.8");
+            get.addHeader("Accept-Charset", "GBK,utf-8;q=0.7,*;q=0.3");
             HttpResponse httpResponse = null;
             httpResponse = httpClient.execute(get);
 

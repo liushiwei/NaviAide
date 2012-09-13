@@ -3,6 +3,8 @@ package com.carit.imhere;
 
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
+import java.io.UnsupportedEncodingException;
+import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -93,7 +95,7 @@ public class MapMode extends MapActivity implements OnClickListener, LocationCal
     public static final int HTTP_HTREAD_START = 0x101;
 
     public static final int HTTP_HTREAD_COMPLETE = 0x102;
-    
+
     public static final int NOPOINTS = 0x103;
 
     public static final int GET_PATH = 0x201;
@@ -109,8 +111,8 @@ public class MapMode extends MapActivity implements OnClickListener, LocationCal
     private Location mOrigin;
 
     private GeoPoint mDestination;
-    
-    private String mtypes ;
+
+    private String mtypes;
 
     /**
      * 弹出的气泡View
@@ -158,7 +160,7 @@ public class MapMode extends MapActivity implements OnClickListener, LocationCal
                     }
                     Log.e("MapMode", "HTTP_HTREAD_COMPLETE");
                     break;
-                    
+
                 case NOPOINTS:
                     Toast.makeText(getBaseContext(), "No Points", Toast.LENGTH_LONG).show();
                     break;
@@ -358,8 +360,8 @@ public class MapMode extends MapActivity implements OnClickListener, LocationCal
         TestProvider.getInstance()
                 .init((LocationManager) getSystemService(Context.LOCATION_SERVICE))
                 .setLocation(location);
-        // TestProvider.getInstance().startProvider((LocationManager)
-        // getSystemService(Context.LOCATION_SERVICE));
+        // TestProvider.getInstance().init((LocationManager)
+        // getSystemService(Context.LOCATION_SERVICE)).startProvider();
         super.onResume();
     }
 
@@ -441,19 +443,20 @@ public class MapMode extends MapActivity implements OnClickListener, LocationCal
 
         }
         if (mtypes != null) {
-            queryPoi(null,mtypes);
+            queryPoi(null, mtypes);
         }
     }
-    
-    private void queryPoi(String keyWord,String type){
+
+    private void queryPoi(String keyWord, String type) {
         String url = null;
-        if(keyWord==null)
-        url = "https://maps.googleapis.com/maps/api/place/search/json?location="
-                + "22.538928,113.994162" + "&radius=" + mRadius + "&types=" + type
-                + "&sensor=true&key=AIzaSyDbYqd7KvrZhqffpw4YfMsDreKgk9MuGJM&language=zh-CN";
+        if (keyWord == null)
+            url = "https://maps.googleapis.com/maps/api/place/search/json?location="
+                    + "22.538928,113.994162" + "&radius=" + mRadius + "&types=" + type
+                    + "&sensor=true&key=AIzaSyDbYqd7KvrZhqffpw4YfMsDreKgk9MuGJM&language=zh-CN";
         else
             url = "https://maps.googleapis.com/maps/api/place/search/json?location="
-                    + "22.538928,113.994162" + "&radius=" + mRadius + "&types=" + type+"&name="+keyWord
+                    + "22.538928,113.994162" + "&radius=" + mRadius + "&types=" + type + "&name="
+                    + keyWord
                     + "&sensor=true&key=AIzaSyDbYqd7KvrZhqffpw4YfMsDreKgk9MuGJM&language=zh-CN";
         HttpThread thread = new HttpThread(url, new HttpThreadListener() {
 
@@ -490,8 +493,8 @@ public class MapMode extends MapActivity implements OnClickListener, LocationCal
                 }
 
                 Log.e("MapMode", mPlaces.getStatus());
-                if(!mMapView.getOverlays().contains(mOverlay))
-                mMapView.getOverlays().add(mOverlay);
+                if (!mMapView.getOverlays().contains(mOverlay))
+                    mMapView.getOverlays().add(mOverlay);
                 mHandler.obtainMessage(HTTP_HTREAD_COMPLETE).sendToTarget();
             }
         });
@@ -503,7 +506,7 @@ public class MapMode extends MapActivity implements OnClickListener, LocationCal
         // TODO Auto-generated method stub
 
         if (v.getTag() != null) {
-            getPath((GeoPoint) v.getTag());
+            getPath((GeoPoint) v.getTag(), null);
         } else {
             switch (v.getId()) {
                 case R.id.hide:
@@ -534,7 +537,7 @@ public class MapMode extends MapActivity implements OnClickListener, LocationCal
                     mIsPause = false;
                     break;
                 case R.id.ImageButtonHotkey:
-                    EditText text = (EditText)findViewById(R.id.TextViewSearch);
+                    EditText text = (EditText) findViewById(R.id.TextViewSearch);
                     String keyWord = text.getText().toString().trim().replaceAll(" ", "|");
                     queryPoi(keyWord, mtypes);
                     break;
@@ -589,7 +592,7 @@ public class MapMode extends MapActivity implements OnClickListener, LocationCal
 
     }
 
-    public void getPath(GeoPoint point) {
+    public void getPath(GeoPoint point, GeoPoint[] passPoint) {
         if (mPopNoBtnView != null && mPopNoBtnView.isShown()) {
             mPopNoBtnView.setVisibility(View.GONE);
         }
@@ -600,9 +603,27 @@ public class MapMode extends MapActivity implements OnClickListener, LocationCal
         String destination = lat.substring(0, lat.length() - 6) + "."
                 + lat.substring(lat.length() - 6) + "," + lng.substring(0, lng.length() - 6) + "."
                 + lng.substring(lng.length() - 6);
-        String url = "http://maps.google.com/maps/api/directions/json?origin=" + origin
-                + "&destination=" + destination + "&sensor=false&mode=driving";
-
+        String url = null;
+        if (passPoint == null) {
+            url = "http://maps.google.com/maps/api/directions/json?origin=" + origin
+                    + "&destination=" + destination + "&sensor=false&mode=driving";
+        } else {
+            String waypoints = "";
+            for (GeoPoint pass : passPoint) {
+                waypoints += pass.getLatitudeE6() / 1E6 + "," + pass.getLongitudeE6() / 1E6 + "|";
+            }
+            waypoints = waypoints.substring(0, waypoints.length() - 2);
+            try {
+                waypoints = URLEncoder.encode(waypoints, "UTF-8");
+                Log.e("ParkingOverlay", "waypoints = "+waypoints );
+            } catch (UnsupportedEncodingException e1) {
+                // TODO Auto-generated catch block
+                e1.printStackTrace();
+            }
+            url = "http://maps.google.com/maps/api/directions/json?origin=" + origin
+                    + "&destination=" + destination + "&sensor=false&mode=driving&waypoints="
+                    + waypoints;
+        }
         HttpThread thread = new HttpThread(url, new HttpThreadListener() {
 
             public void start() {
@@ -766,7 +787,7 @@ public class MapMode extends MapActivity implements OnClickListener, LocationCal
                         }
                     }
                 }
-            }else{
+            } else {
                 mHandler.sendEmptyMessage(NOPOINTS);
             }
             super.run();
