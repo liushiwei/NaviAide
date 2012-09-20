@@ -148,6 +148,21 @@ public class LongPressOverlay extends ItemizedOverlay implements OnDoubleTapList
         // TODO Auto-generated method stub
         return mOverlays.size();
     }
+    
+    public void addOverlayItem(OverlayItem item){
+        MapView.LayoutParams params = (MapView.LayoutParams) mPopView.getLayoutParams();
+        params.x = mDrawable.getBounds().centerX();// Y轴偏移
+        params.y = -mDrawable.getBounds().height();// Y轴偏移
+        GeoPoint point = item.getPoint();
+        params.point = point;
+        mMapCtrl.animateTo(point);
+        mOverlays.add(item);
+        mCurrentIndex = mOverlays.size() - 1;
+        populate();
+        mMapView.updateViewLayout(mPopView, params);
+        mPopView.setVisibility(View.VISIBLE);
+        Log.e("LongPressOverlay", "point = " + point.getLatitudeE6() + "," + point.getLongitudeE6());
+    }
 
     @Override
     public void onClick(View v) {

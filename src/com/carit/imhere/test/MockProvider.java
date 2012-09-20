@@ -15,26 +15,27 @@ import com.google.android.maps.GeoPoint;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 
-public class TestProvider {
-    private static TestProvider privader;
-    private LocationManager mLocationManager;
-    private TestProvider(){
+public class MockProvider {
+    private static MockProvider privader;
+    public static final String MODK_PROVIDER=LocationManager.NETWORK_PROVIDER; 
+    private static LocationManager mLocationManager;
+    
+    private boolean isInit;
+    private MockProvider(){
         
     }
     
-    public static TestProvider getInstance(){
+    public static MockProvider getInstance(){
         if(privader==null)
-            privader = new TestProvider();
+            privader = new MockProvider();
         return privader;
             
     }
     
-    public static void init(LocationManager gpsLocationManager,LocationListener listener){
-        String mocLocationProvider = LocationManager.NETWORK_PROVIDER;
-        gpsLocationManager.addTestProvider(mocLocationProvider, false, false,
-        false, false, true, true, true, 0, 5);
-        gpsLocationManager.setTestProviderEnabled(mocLocationProvider, true);
-        gpsLocationManager.requestLocationUpdates(mocLocationProvider, 0, 0, listener);
+    public MockProvider init(LocationManager gpsLocationManager,LocationListener listener){
+        init(gpsLocationManager);
+        mLocationManager.requestLocationUpdates(MODK_PROVIDER, 0, 0, listener);
+        return this;
     }
     
     public static void generateGpsFile(List<GeoPoint> points){
@@ -106,11 +107,16 @@ public class TestProvider {
         mLocationManager.setTestProviderLocation(LocationManager.NETWORK_PROVIDER, location);
     }
     
-    public TestProvider init(LocationManager gpsLocationManager){
+    public MockProvider init(LocationManager gpsLocationManager){
+        if(!isInit){
         mLocationManager = gpsLocationManager;
-        if(privader==null)
-            privader = new TestProvider();
-        return privader;
+        mLocationManager.addTestProvider(MODK_PROVIDER, false, false,
+        false, false, true, true, true, 0, 5);
+        mLocationManager.setTestProviderEnabled(MODK_PROVIDER, true);
+        isInit = true;
+        }
+        
+        return this;
     }
 
 }

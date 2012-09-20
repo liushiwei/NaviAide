@@ -12,10 +12,14 @@ import android.app.AlertDialog;
 import android.app.Dialog;
 import android.app.PendingIntent;
 import android.app.PendingIntent.CanceledException;
+import android.content.BroadcastReceiver;
+import android.content.ComponentName;
 import android.content.ContentResolver;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.IntentFilter;
+import android.content.ServiceConnection;
 import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.Bitmap.CompressFormat;
@@ -27,8 +31,10 @@ import android.location.LocationManager;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
+import android.os.IBinder;
 import android.os.Message;
 import android.provider.Settings;
+import android.telephony.SmsMessage;
 import android.util.Log;
 import android.view.View;
 import android.view.View.OnClickListener;
@@ -43,32 +49,30 @@ import android.widget.TextView;
 import android.widget.Toast;
 import android.widget.ToggleButton;
 
-import com.carit.imhere.MyLocationManager.LocationCallBack;
+import com.carit.imhere.NaviAideService.ServiceCallBack;
 import com.carit.imhere.obj.Directions;
 import com.carit.imhere.obj.Place;
 import com.carit.imhere.obj.PlaceSearchResult;
 import com.carit.imhere.obj.Step;
 import com.carit.imhere.provider.LocationTable;
-import com.carit.imhere.test.TestProvider;
+import com.carit.imhere.test.MockProvider;
 import com.google.android.maps.GeoPoint;
 import com.google.android.maps.MapActivity;
 import com.google.android.maps.MapController;
 import com.google.android.maps.MapView;
-import com.google.android.maps.MyLocationOverlay;
 import com.google.android.maps.Overlay;
 import com.google.android.maps.OverlayItem;
 import com.google.gson.Gson;
 
-public class MapMode extends MapActivity implements OnClickListener, LocationCallBack {
+public class MapMode extends MapActivity implements OnClickListener, ServiceCallBack {
+    
+    public static final String TAG = "MapMode";
+    
     private MapView mMapView;
 
     private MapController mMapController;
 
     private GeoPoint mGeoPoint;
-
-    private LocationManager mLocationManager;
-
-    private MyLocationManager mMyLocationManager;
 
     public static final int PARKING = 0x01;
 
@@ -113,6 +117,8 @@ public class MapMode extends MapActivity implements OnClickListener, LocationCal
     private GeoPoint mDestination;
 
     private String mtypes;
+    
+    private SMS_Receiver mSMSRec;
 
     /**
      * 弹出的气泡View
@@ -138,6 +144,10 @@ public class MapMode extends MapActivity implements OnClickListener, LocationCal
     private Drawable mPassPinDrawable;
 
     private boolean mIsPause;
+    
+    private LongPressOverlay mLongPressOverlay;
+    
+    private MyLocationOverlay mMylocationOverlay;
 
     private Handler mHandler = new Handler() {
 
@@ -170,6 +180,8 @@ public class MapMode extends MapActivity implements OnClickListener, LocationCal
 
     };
 
+    protected NaviAideService mMyService;
+
     /** Called when the activity is first created. */
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -195,21 +207,20 @@ public class MapMode extends MapActivity implements OnClickListener, LocationCal
         criteria.setBearingRequired(false);
         criteria.setCostAllowed(true);
         criteria.setPowerRequirement(Criteria.POWER_LOW);
-        MyLocationManager.init(MapMode.this.getApplicationContext(), MapMode.this);
-        mMyLocationManager = MyLocationManager.getInstance();
+//        MyLocationManager.init(MapMode.this.getApplicationContext(), MapMode.this);
+//        mMyLocationManager = MyLocationManager.getInstance();
 
-        mOrigin = mMyLocationManager.getMyLocation();
-        if (mOrigin != null) {
-            Log.e("MapMode", "get location location.getLatitude()=" + mOrigin.getLatitude()
-                    + " location.getLongitude()=" + mOrigin.getLongitude());
-            mGeoPoint = new GeoPoint((int) (mOrigin.getLatitude() * 1000000),
-                    (int) (mOrigin.getLongitude() * 1000000));
-        } else {
+//        if (mOrigin != null) {
+//            Log.e("MapMode", "get location location.getLatitude()=" + mOrigin.getLatitude()
+//                    + " location.getLongitude()=" + mOrigin.getLongitude());
+//            mGeoPoint = new GeoPoint((int) (mOrigin.getLatitude() * 1000000),
+//                    (int) (mOrigin.getLongitude() * 1000000));
+//        } else {
             mOrigin = new Location(LocationManager.NETWORK_PROVIDER);
-            mOrigin.setLatitude(22.538928);
-            mOrigin.setLongitude(113.994162);
-            mGeoPoint = new GeoPoint((int) (22.538928 * 1000000), (int) (113.994162 * 1000000));
-        }
+            mOrigin.setLatitude(22.541949);
+            mOrigin.setLongitude(113.989629);
+            mGeoPoint = new GeoPoint((int) (22.541949 * 1000000), (int) (113.989629 * 1000000));
+//        }
 
         // 设置起点为 22.538928,113.994162
         // mGeoPoint = new GeoPoint((int) (22.538928 * 1000000), (int)
@@ -222,13 +233,20 @@ public class MapMode extends MapActivity implements OnClickListener, LocationCal
         mMapController.setZoom(17);
 
         // 添加Overlay，用于显示标注信息
-        MyLocationOverlay positionOverlay = new MyLocationOverlay(getBaseContext(), mMapView);
-        positionOverlay.enableCompass();
-        positionOverlay.enableMyLocation();
+        mMylocationOverlay = new MyLocationOverlay(getBaseContext(), mMapView);
+        mMylocationOverlay.runOnFirstFix(new Thread(){
 
+            @Override
+            public void run() {
+                Log.e(TAG, "runOnFirstFix lat="+mMylocationOverlay.getMyLocation().getLatitudeE6()+" lng="+mMylocationOverlay.getMyLocation().getLongitudeE6());
+                mMapController.animateTo(mMylocationOverlay.getMyLocation());
+                super.run();
+            }
+            
+        });
         List<Overlay> list = mMapView.getOverlays();
 
-        list.add(positionOverlay);
+        list.add(mMylocationOverlay);
 
         ToggleButton its = (ToggleButton) findViewById(R.id.ToggleButton_ITS);
         its.setOnCheckedChangeListener(new OnCheckedChangeListener() {
@@ -295,9 +313,15 @@ public class MapMode extends MapActivity implements OnClickListener, LocationCal
         // 设置显示/隐藏气泡的监听器
         // mOverlay.setOnFocusChangeListener(onFocusChangeListener);
         mPassPinDrawable = getResources().getDrawable(R.drawable.pin_purple);
-        list.add(new LongPressOverlay(this, mMapView, mMapController, mPassPinDrawable));
+        mLongPressOverlay = new LongPressOverlay(this, mMapView, mMapController, mPassPinDrawable);
+        list.add(mLongPressOverlay);
         Log.e("MapMode", "network is open" + isOpen());
         processIntent(getIntent());
+        
+        mSMSRec=new SMS_Receiver();
+        IntentFilter filter=new IntentFilter();
+        filter.addAction("android.provider.Telephony.SMS_RECEIVED");
+        this.registerReceiver(mSMSRec,filter);
 
     }
 
@@ -332,40 +356,41 @@ public class MapMode extends MapActivity implements OnClickListener, LocationCal
         }
 
     }
+    
+    
 
     @Override
-    protected void onResume() {
-        /*
-         * //startActivity(new Intent(Settings.ACTION_SECURITY_SETTINGS));
-         * Thread thread =new Thread(){
-         * @Override public void run() { WiFiInfoManager manager = new
-         * WiFiInfoManager(getBaseContext()); Location location =
-         * manager.getWIFILocation();
-         * location.setTime(System.currentTimeMillis());
-         * location.setAltitude(100); LocationManager locationManager =
-         * (LocationManager) getSystemService(Context.LOCATION_SERVICE);
-         * locationManager
-         * .setTestProviderLocation(LocationManager.NETWORK_PROVIDER, location);
-         * super.run(); } }; thread.start();
-         */
-        Location location = new Location(LocationManager.NETWORK_PROVIDER);
-        location.setLatitude(22.538928);
-        location.setLongitude(113.994162);
-        location.setTime(System.currentTimeMillis());
-        location.setAltitude(100);
-        // LocationManager locationManager = (LocationManager)
-        // getSystemService(Context.LOCATION_SERVICE);
-        // locationManager.setTestProviderLocation(LocationManager.NETWORK_PROVIDER,
-        // location);
-        TestProvider.getInstance()
-                .init((LocationManager) getSystemService(Context.LOCATION_SERVICE))
-                .setLocation(location);
-        // TestProvider.getInstance().init((LocationManager)
-        // getSystemService(Context.LOCATION_SERVICE)).startProvider();
-        super.onResume();
+    protected void onPause() {
+        mMylocationOverlay.disableMyLocation();
+        mMylocationOverlay.disableCompass();
+        super.onPause();
     }
 
     @Override
+    protected void onResume() {
+        
+        mMylocationOverlay.enableCompass();
+        mMylocationOverlay.enableMyLocation();
+//        Location location = new Location(MockProvider.MODK_PROVIDER);
+//        location.setLatitude(22.538928);
+//        location.setLongitude(113.994162);
+//        location.setTime(System.currentTimeMillis());
+//        location.setAltitude(100);
+        
+//        MockProvider.getInstance()
+//                .init((LocationManager) getSystemService(Context.LOCATION_SERVICE))
+//                .setLocation(location);
+//         MockProvider.getInstance().init((LocationManager)
+        Intent i  = new Intent();  
+        i.setClass(this, NaviAideService.class);  
+        startService(i);  
+        bindService(i, mServiceConnection, Context.BIND_AUTO_CREATE);
+        super.onResume();
+    }
+    
+    
+
+    /*@Override
     protected Dialog onCreateDialog(int id) {
         // TODO Auto-generated method stub
 
@@ -388,12 +413,12 @@ public class MapMode extends MapActivity implements OnClickListener, LocationCal
         }
 
         return super.onCreateDialog(id);
-    }
+    }*/
 
     /**
      * 发送请求，打开GPS
      */
-    private void toggleGPS() {
+   /* private void toggleGPS() {
         Intent gpsIntent = new Intent();
         gpsIntent.setClassName("com.android.settings",
                 "com.android.settings.widget.SettingsAppWidgetProvider");
@@ -405,7 +430,7 @@ public class MapMode extends MapActivity implements OnClickListener, LocationCal
             e.printStackTrace();
         }
     }
-
+*/
     private void processIntent(Intent intent) {
         mtypes = null;
         int key = intent.getIntExtra("hotkey", -1);
@@ -579,18 +604,7 @@ public class MapMode extends MapActivity implements OnClickListener, LocationCal
         return poly;
     }
 
-    @Override
-    public void onCurrentLocation(Location location) {
-        ;
-        if (location != null) {
-            Log.i("SuperMap", "Location changed :provider" + location.getProvider() + " Lat: "
-                    + location.getLatitude() + " Lng: " + location.getLongitude());
-            mMapController.animateTo(new GeoPoint((int) (location.getLatitude() * 1000000),
-                    (int) (location.getLongitude() * 1000000)));
-            mOrigin = location;
-        }
-
-    }
+   
 
     public void getPath(GeoPoint point, GeoPoint[] passPoint) {
         if (mPopNoBtnView != null && mPopNoBtnView.isShown()) {
@@ -659,7 +673,7 @@ public class MapMode extends MapActivity implements OnClickListener, LocationCal
                             new GeoPoint((int) (mOrigin.getLatitude() * 1E6), (int) (mOrigin
                                     .getLongitude() * 1E6)));
                     points.add(mDestination);
-                    // TestProvider.generateGpsFile(points);
+                    // MockProvider.generateGpsFile(points);
                     if (mPathOverlay == null) {
 
                         mStartPinDrawable = getResources().getDrawable(R.drawable.icon_nav_start);
@@ -794,5 +808,80 @@ public class MapMode extends MapActivity implements OnClickListener, LocationCal
         }
 
     };
+    
+    public class SMS_Receiver extends BroadcastReceiver {
+
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            // #navi#|22534717,113987961|
+            Log.e("SMS_Receiver","收到短信");
+            if (intent.getAction().equals("android.provider.Telephony.SMS_RECEIVED")) {
+                Object[] pdus = (Object[]) intent.getExtras().get("pdus");
+                // 不知道为什么明明只有一条消息，传过来的却是数组，也许是为了处理同时同分同秒同毫秒收到多条短信
+                // 但这个概率有点小
+                SmsMessage[] message = new SmsMessage[pdus.length];
+                StringBuilder sb = new StringBuilder();
+                Log.e("SMS_Receiver","pdus长度" + pdus.length);
+                for (int i = 0; i < pdus.length; i++) {
+                    // 虽然是循环，其实pdus长度一般都是1
+                    message[i] = SmsMessage.createFromPdu((byte[]) pdus[i]);
+                    sb.append("接收到短信来自:\n");
+                    sb.append(message[i].getDisplayOriginatingAddress() + "\n");
+                    sb.append("内容:" + message[i].getDisplayMessageBody());
+                    String body =  message[i].getDisplayMessageBody();
+                    if(body.contains("#navi#")){
+                        String point = body.substring(body.indexOf("|")+1, body.indexOf("|",body.indexOf("|")+1));
+                        String [] tmp = point.split(",");
+                        OverlayItem overlayItem = new OverlayItem(new GeoPoint(Integer.valueOf(tmp[0]),Integer.valueOf(tmp[1])),"","");
+                        mLongPressOverlay.addOverlayItem(overlayItem);
+                        this.abortBroadcast();
+                    }
+                }
+                Log.e("SMS_Receiver",sb.toString());
+            }
+        }
+        
+        
+    }
+
+    @Override
+    protected void onDestroy() {
+        //mMyLocationManager.destoryLocationManager();
+        unregisterReceiver(mSMSRec);
+        unbindService(mServiceConnection);
+        super.onDestroy();
+    }
+
+    private ServiceConnection mServiceConnection = new ServiceConnection() {  
+        //当我bindService时，让TextView显示MyService里getSystemTime()方法的返回值   
+        public void onServiceConnected(ComponentName name, IBinder service) {  
+            // TODO Auto-generated method stub  
+            Log.e(TAG, "onServiceConnected");
+            mMyService = ((NaviAideService.MyBinder)service).getService();  
+            mMyService.setCallBack(MapMode.this);
+        }  
+          
+        public void onServiceDisconnected(ComponentName name) {  
+            // TODO Auto-generated method stub  
+              
+        }  
+    };
+
+    @Override
+    public void onLocationChange(Location location) {
+        if (location != null) {
+         
+//            Log.i("SuperMap", "Location changed :provider = " + location.getProvider() + " Lat: "
+//                    + location.getLatitude() + " Lng: " + location.getLongitude());
+            mMapController.animateTo(new GeoPoint((int) (location.getLatitude() * 1000000),
+                    (int) (location.getLongitude() * 1000000)));
+            mOrigin = location;
+//            Toast.makeText(getBaseContext(), "provider = " + location.getProvider() + " Lat: "
+//                    + location.getLatitude() + " Lng: " + location.getLongitude(), Toast.LENGTH_LONG).show();
+        }
+
+    }  
+    
+    
 
 }
