@@ -65,9 +65,9 @@ import com.google.android.maps.OverlayItem;
 import com.google.gson.Gson;
 
 public class MapMode extends MapActivity implements OnClickListener, ServiceCallBack {
-    
+
     public static final String TAG = "MapMode";
-    
+
     private MapView mMapView;
 
     private MapController mMapController;
@@ -102,6 +102,10 @@ public class MapMode extends MapActivity implements OnClickListener, ServiceCall
 
     public static final int NOPOINTS = 0x103;
 
+    public static final int NETWORKERROR = 0x104;
+    
+    public static final int NOTRACK = 0x105;
+
     public static final int GET_PATH = 0x201;
 
     private int mRadius = 1000;
@@ -117,8 +121,9 @@ public class MapMode extends MapActivity implements OnClickListener, ServiceCall
     private GeoPoint mDestination;
 
     private String mtypes;
-    
-    private SMS_Receiver mSMSRec;
+
+    private int mViewType;
+    //private SMS_Receiver mSMSRec;
 
     /**
      * 弹出的气泡View
@@ -144,9 +149,9 @@ public class MapMode extends MapActivity implements OnClickListener, ServiceCall
     private Drawable mPassPinDrawable;
 
     private boolean mIsPause;
-    
+
     private LongPressOverlay mLongPressOverlay;
-    
+
     private MyLocationOverlay mMylocationOverlay;
 
     private Handler mHandler = new Handler() {
@@ -172,7 +177,16 @@ public class MapMode extends MapActivity implements OnClickListener, ServiceCall
                     break;
 
                 case NOPOINTS:
-                    Toast.makeText(getBaseContext(), "No Points", Toast.LENGTH_LONG).show();
+                    findViewById(R.id.progress_loc).setVisibility(View.GONE);
+                    Toast.makeText(getBaseContext(), R.string.no_poi, Toast.LENGTH_LONG).show();
+                    break;
+                case NETWORKERROR:
+                    findViewById(R.id.progress_loc).setVisibility(View.GONE);
+                    Toast.makeText(getBaseContext(), R.string.network_error, Toast.LENGTH_LONG)
+                            .show();
+                    break;
+                case NOTRACK:
+                    Toast.makeText(getBaseContext(), R.string.no_track, Toast.LENGTH_LONG).show();
                     break;
             }
             super.handleMessage(msg);
@@ -201,48 +215,117 @@ public class MapMode extends MapActivity implements OnClickListener, ServiceCall
         // 设置地图支持缩放
         mMapView.setBuiltInZoomControls(true);
 
-        Criteria criteria = new Criteria();
-        criteria.setAccuracy(Criteria.ACCURACY_FINE);
-        criteria.setAltitudeRequired(false);
-        criteria.setBearingRequired(false);
-        criteria.setCostAllowed(true);
-        criteria.setPowerRequirement(Criteria.POWER_LOW);
-//        MyLocationManager.init(MapMode.this.getApplicationContext(), MapMode.this);
-//        mMyLocationManager = MyLocationManager.getInstance();
-
-//        if (mOrigin != null) {
-//            Log.e("MapMode", "get location location.getLatitude()=" + mOrigin.getLatitude()
-//                    + " location.getLongitude()=" + mOrigin.getLongitude());
-//            mGeoPoint = new GeoPoint((int) (mOrigin.getLatitude() * 1000000),
-//                    (int) (mOrigin.getLongitude() * 1000000));
-//        } else {
-            mOrigin = new Location(LocationManager.NETWORK_PROVIDER);
-            mOrigin.setLatitude(22.541949);
-            mOrigin.setLongitude(113.989629);
-            mGeoPoint = new GeoPoint((int) (22.541949 * 1000000), (int) (113.989629 * 1000000));
-//        }
-
-        // 设置起点为 22.538928,113.994162
-        // mGeoPoint = new GeoPoint((int) (22.538928 * 1000000), (int)
-        // (113.994162 * 1000000));
+        mOrigin = new Location(LocationManager.NETWORK_PROVIDER);
+        mOrigin.setLatitude(22.541949);
+        mOrigin.setLongitude(113.989629);
+        mGeoPoint = new GeoPoint((int) (22.541949 * 1000000), (int) (113.989629 * 1000000));
 
         // 定位到深圳
 
         mMapController.animateTo(mGeoPoint);
         // 设置倍数(1-21)
-        mMapController.setZoom(17);
+        mMapController.setZoom(18);
 
+       
+        //Log.e("MapMode", "network is open" + isOpen());
+        processIntent(getIntent());
+
+//        mSMSRec = new SMS_Receiver();
+//        IntentFilter filter = new IntentFilter();
+//        filter.addAction("android.provider.Telephony.SMS_RECEIVED");
+//        this.registerReceiver(mSMSRec, filter);
+
+    }
+
+    protected boolean isRouteDisplayed() {
+        return false;
+    }
+
+    /**
+     * [功能描述] 检查GPS的开关状态
+     * 
+     * @return [参数说明] true：开/false：关
+     * @createTime 2011-4-14 下午01:27:06
+     */
+    private boolean isOpen() {
+        // Intent gpsIntent = new Intent();
+        // gpsIntent.setClassName("com.android.settings",
+        // "com.android.settings.widget.SettingsAppWidgetProvider");
+        // gpsIntent.addCategory("android.intent.category.ALTERNATIVE");
+        // gpsIntent.setData(Uri.parse("custom:0"));
+        // try {
+        // PendingIntent.getBroadcast(this, 0, gpsIntent, 0).send();
+        // } catch (CanceledException e) {
+        // e.printStackTrace();
+        // }
+        String str = Settings.Secure.getString(getContentResolver(),
+                Settings.Secure.LOCATION_PROVIDERS_ALLOWED);
+        Log.v("MapMode", "available providers :" + str);
+        if (str != null) {
+            return str.contains("network");
+        } else {
+            return false;
+        }
+
+    }
+
+    @Override
+    protected void onPause() {
+        if(CAR_ROUTE!=mViewType){
+        mMylocationOverlay.disableMyLocation();
+        mMylocationOverlay.disableCompass();
+        }
+        super.onPause();
+    }
+
+    @Override
+    protected void onResume() {
+        if(CAR_ROUTE!=mViewType){
+        mMylocationOverlay.enableCompass();
+        mMylocationOverlay.enableMyLocation();
+        }
+        // Location location = new Location(MockProvider.MODK_PROVIDER);
+        // location.setLatitude(22.538928);
+        // location.setLongitude(113.994162);
+        // location.setTime(System.currentTimeMillis());
+        // location.setAltitude(100);
+
+        // MockProvider.getInstance()
+        // .init((LocationManager) getSystemService(Context.LOCATION_SERVICE))
+        // .setLocation(location);
+        // MockProvider.getInstance().init((LocationManager)
+        Intent i = new Intent();
+        i.setClass(this, NaviAideService.class);
+        startService(i);
+        bindService(i, mServiceConnection, Context.BIND_AUTO_CREATE);
+        super.onResume();
+    }
+
+    /*
+     * @Override protected Dialog onCreateDialog(int id) { // TODO
+     * Auto-generated method stub switch (id) { case 0: return new
+     * AlertDialog.Builder(MapMode.this).setMessage("您确定要打开GPS吗？")
+     * .setPositiveButton("确定", new DialogInterface.OnClickListener() { public
+     * void onClick(DialogInterface dialog, int which) { // TODO Auto-generated
+     * method stub toggleGPS(); } }).setNegativeButton("取消", new
+     * DialogInterface.OnClickListener() { public void onClick(DialogInterface
+     * dialog, int which) { // TODO Auto-generated method stub } }).create(); }
+     * return super.onCreateDialog(id); }
+     */
+    private void init(){
         // 添加Overlay，用于显示标注信息
         mMylocationOverlay = new MyLocationOverlay(getBaseContext(), mMapView);
-        mMylocationOverlay.runOnFirstFix(new Thread(){
+        mMylocationOverlay.runOnFirstFix(new Thread() {
 
             @Override
             public void run() {
-                Log.e(TAG, "runOnFirstFix lat="+mMylocationOverlay.getMyLocation().getLatitudeE6()+" lng="+mMylocationOverlay.getMyLocation().getLongitudeE6());
+                Log.e(TAG, "runOnFirstFix lat="
+                        + mMylocationOverlay.getMyLocation().getLatitudeE6() + " lng="
+                        + mMylocationOverlay.getMyLocation().getLongitudeE6());
                 mMapController.animateTo(mMylocationOverlay.getMyLocation());
                 super.run();
             }
-            
+
         });
         List<Overlay> list = mMapView.getOverlays();
 
@@ -315,126 +398,23 @@ public class MapMode extends MapActivity implements OnClickListener, ServiceCall
         mPassPinDrawable = getResources().getDrawable(R.drawable.pin_purple);
         mLongPressOverlay = new LongPressOverlay(this, mMapView, mMapController, mPassPinDrawable);
         list.add(mLongPressOverlay);
-        Log.e("MapMode", "network is open" + isOpen());
-        processIntent(getIntent());
-        
-        mSMSRec=new SMS_Receiver();
-        IntentFilter filter=new IntentFilter();
-        filter.addAction("android.provider.Telephony.SMS_RECEIVED");
-        this.registerReceiver(mSMSRec,filter);
-
     }
-
-    protected boolean isRouteDisplayed() {
-        return false;
-    }
-
-    /**
-     * [功能描述] 检查GPS的开关状态
-     * 
-     * @return [参数说明] true：开/false：关
-     * @createTime 2011-4-14 下午01:27:06
-     */
-    private boolean isOpen() {
-        // Intent gpsIntent = new Intent();
-        // gpsIntent.setClassName("com.android.settings",
-        // "com.android.settings.widget.SettingsAppWidgetProvider");
-        // gpsIntent.addCategory("android.intent.category.ALTERNATIVE");
-        // gpsIntent.setData(Uri.parse("custom:0"));
-        // try {
-        // PendingIntent.getBroadcast(this, 0, gpsIntent, 0).send();
-        // } catch (CanceledException e) {
-        // e.printStackTrace();
-        // }
-        String str = Settings.Secure.getString(getContentResolver(),
-                Settings.Secure.LOCATION_PROVIDERS_ALLOWED);
-        Log.v("MapMode", "available providers :" + str);
-        if (str != null) {
-            return str.contains("network");
-        } else {
-            return false;
-        }
-
-    }
-    
-    
-
-    @Override
-    protected void onPause() {
-        mMylocationOverlay.disableMyLocation();
-        mMylocationOverlay.disableCompass();
-        super.onPause();
-    }
-
-    @Override
-    protected void onResume() {
-        
-        mMylocationOverlay.enableCompass();
-        mMylocationOverlay.enableMyLocation();
-//        Location location = new Location(MockProvider.MODK_PROVIDER);
-//        location.setLatitude(22.538928);
-//        location.setLongitude(113.994162);
-//        location.setTime(System.currentTimeMillis());
-//        location.setAltitude(100);
-        
-//        MockProvider.getInstance()
-//                .init((LocationManager) getSystemService(Context.LOCATION_SERVICE))
-//                .setLocation(location);
-//         MockProvider.getInstance().init((LocationManager)
-        Intent i  = new Intent();  
-        i.setClass(this, NaviAideService.class);  
-        startService(i);  
-        bindService(i, mServiceConnection, Context.BIND_AUTO_CREATE);
-        super.onResume();
-    }
-    
-    
-
-    /*@Override
-    protected Dialog onCreateDialog(int id) {
-        // TODO Auto-generated method stub
-
-        switch (id) {
-            case 0:
-                return new AlertDialog.Builder(MapMode.this).setMessage("您确定要打开GPS吗？")
-                        .setPositiveButton("确定", new DialogInterface.OnClickListener() {
-
-                            public void onClick(DialogInterface dialog, int which) {
-                                // TODO Auto-generated method stub
-                                toggleGPS();
-                            }
-                        }).setNegativeButton("取消", new DialogInterface.OnClickListener() {
-
-                            public void onClick(DialogInterface dialog, int which) {
-                                // TODO Auto-generated method stub
-
-                            }
-                        }).create();
-        }
-
-        return super.onCreateDialog(id);
-    }*/
-
     /**
      * 发送请求，打开GPS
      */
-   /* private void toggleGPS() {
-        Intent gpsIntent = new Intent();
-        gpsIntent.setClassName("com.android.settings",
-                "com.android.settings.widget.SettingsAppWidgetProvider");
-        gpsIntent.addCategory("android.intent.category.ALTERNATIVE");
-        gpsIntent.setData(Uri.parse("custom:3"));
-        try {
-            PendingIntent.getBroadcast(this, 0, gpsIntent, 0).send();
-        } catch (CanceledException e) {
-            e.printStackTrace();
-        }
-    }
-*/
+    /*
+     * private void toggleGPS() { Intent gpsIntent = new Intent();
+     * gpsIntent.setClassName("com.android.settings",
+     * "com.android.settings.widget.SettingsAppWidgetProvider");
+     * gpsIntent.addCategory("android.intent.category.ALTERNATIVE");
+     * gpsIntent.setData(Uri.parse("custom:3")); try {
+     * PendingIntent.getBroadcast(this, 0, gpsIntent, 0).send(); } catch
+     * (CanceledException e) { e.printStackTrace(); } }
+     */
     private void processIntent(Intent intent) {
         mtypes = null;
-        int key = intent.getIntExtra("hotkey", -1);
-        switch (key) {
+        mViewType = intent.getIntExtra("hotkey", -1);
+        switch (mViewType) {
             case PARKING:
                 mtypes = "parking";
                 break;
@@ -461,11 +441,19 @@ public class MapMode extends MapActivity implements OnClickListener, ServiceCall
                 break;
             case CAR_ROUTE:
                 findViewById(R.id.trackControl).setVisibility(View.VISIBLE);
+                findViewById(R.id.LinearLayoutMapSearch).setVisibility(View.GONE);
+                findViewById(R.id.ToggleButton_ITS).setVisibility(View.GONE);
                 findViewById(R.id.pause).setOnClickListener(this);
                 findViewById(R.id.play).setOnClickListener(this);
+                mPathPinDrawable = getResources().getDrawable(R.drawable.pin_orange);
+                mPathPinDrawable.setBounds(0, 0, mPathPinDrawable.getIntrinsicWidth(),
+                        mPathPinDrawable.getIntrinsicHeight());
                 queryPoint(intent.getLongExtra("start_time", 0), intent.getLongExtra("end_time", 0));
                 break;
 
+        }
+        if(CAR_ROUTE!=mViewType){
+            init();
         }
         if (mtypes != null) {
             queryPoi(null, mtypes);
@@ -486,13 +474,13 @@ public class MapMode extends MapActivity implements OnClickListener, ServiceCall
         HttpThread thread = new HttpThread(url, new HttpThreadListener() {
 
             public void start() {
-                mHandler.obtainMessage(HTTP_HTREAD_START).sendToTarget();
+                mHandler.sendEmptyMessage(HTTP_HTREAD_START);
 
             }
 
             public void netError(String error) {
-                // TODO Auto-generated method stub
 
+                mHandler.sendEmptyMessage(NETWORKERROR);
             }
 
             public void complete(String result) {
@@ -515,12 +503,14 @@ public class MapMode extends MapActivity implements OnClickListener, ServiceCall
                         mOverlay.addOverlay(overlayItem);
 
                     }
+                    Log.e("MapMode", mPlaces.getStatus());
+                    if (!mMapView.getOverlays().contains(mOverlay))
+                        mMapView.getOverlays().add(mOverlay);
+                    mHandler.obtainMessage(HTTP_HTREAD_COMPLETE).sendToTarget();
+                }else{
+                    mHandler.sendEmptyMessage(NOPOINTS);
                 }
 
-                Log.e("MapMode", mPlaces.getStatus());
-                if (!mMapView.getOverlays().contains(mOverlay))
-                    mMapView.getOverlays().add(mOverlay);
-                mHandler.obtainMessage(HTTP_HTREAD_COMPLETE).sendToTarget();
             }
         });
         thread.start();
@@ -604,8 +594,6 @@ public class MapMode extends MapActivity implements OnClickListener, ServiceCall
         return poly;
     }
 
-   
-
     public void getPath(GeoPoint point, GeoPoint[] passPoint) {
         if (mPopNoBtnView != null && mPopNoBtnView.isShown()) {
             mPopNoBtnView.setVisibility(View.GONE);
@@ -629,7 +617,7 @@ public class MapMode extends MapActivity implements OnClickListener, ServiceCall
             waypoints = waypoints.substring(0, waypoints.length() - 2);
             try {
                 waypoints = URLEncoder.encode(waypoints, "UTF-8");
-                Log.e("ParkingOverlay", "waypoints = "+waypoints );
+                Log.e("ParkingOverlay", "waypoints = " + waypoints);
             } catch (UnsupportedEncodingException e1) {
                 // TODO Auto-generated catch block
                 e1.printStackTrace();
@@ -646,7 +634,7 @@ public class MapMode extends MapActivity implements OnClickListener, ServiceCall
             }
 
             public void netError(String error) {
-                // TODO Auto-generated method stub
+                mHandler.obtainMessage(NETWORKERROR).sendToTarget();
 
             }
 
@@ -802,85 +790,89 @@ public class MapMode extends MapActivity implements OnClickListener, ServiceCall
                     }
                 }
             } else {
-                mHandler.sendEmptyMessage(NOPOINTS);
+                mHandler.sendEmptyMessage(NOTRACK);
             }
             super.run();
         }
 
     };
-    
-    public class SMS_Receiver extends BroadcastReceiver {
+
+  /*  public class SMS_Receiver extends BroadcastReceiver {
 
         @Override
         public void onReceive(Context context, Intent intent) {
             // #navi#|22534717,113987961|
-            Log.e("SMS_Receiver","收到短信");
+            Log.e("SMS_Receiver", "收到短信");
             if (intent.getAction().equals("android.provider.Telephony.SMS_RECEIVED")) {
                 Object[] pdus = (Object[]) intent.getExtras().get("pdus");
                 // 不知道为什么明明只有一条消息，传过来的却是数组，也许是为了处理同时同分同秒同毫秒收到多条短信
                 // 但这个概率有点小
                 SmsMessage[] message = new SmsMessage[pdus.length];
                 StringBuilder sb = new StringBuilder();
-                Log.e("SMS_Receiver","pdus长度" + pdus.length);
+                Log.e("SMS_Receiver", "pdus长度" + pdus.length);
                 for (int i = 0; i < pdus.length; i++) {
                     // 虽然是循环，其实pdus长度一般都是1
                     message[i] = SmsMessage.createFromPdu((byte[]) pdus[i]);
                     sb.append("接收到短信来自:\n");
                     sb.append(message[i].getDisplayOriginatingAddress() + "\n");
                     sb.append("内容:" + message[i].getDisplayMessageBody());
-                    String body =  message[i].getDisplayMessageBody();
-                    if(body.contains("#navi#")){
-                        String point = body.substring(body.indexOf("|")+1, body.indexOf("|",body.indexOf("|")+1));
-                        String [] tmp = point.split(",");
-                        OverlayItem overlayItem = new OverlayItem(new GeoPoint(Integer.valueOf(tmp[0]),Integer.valueOf(tmp[1])),"","");
+                    String body = message[i].getDisplayMessageBody();
+                    if (body.contains("#navi#")) {
+                        String point = body.substring(body.indexOf("|") + 1,
+                                body.indexOf("|", body.indexOf("|") + 1));
+                        String[] tmp = point.split(",");
+                        OverlayItem overlayItem = new OverlayItem(new GeoPoint(
+                                Integer.valueOf(tmp[0]), Integer.valueOf(tmp[1])), "", "");
                         mLongPressOverlay.addOverlayItem(overlayItem);
                         this.abortBroadcast();
                     }
                 }
-                Log.e("SMS_Receiver",sb.toString());
+                Log.e("SMS_Receiver", sb.toString());
             }
         }
-        
-        
-    }
 
+    }
+*/
     @Override
     protected void onDestroy() {
-        //mMyLocationManager.destoryLocationManager();
-        unregisterReceiver(mSMSRec);
+        // mMyLocationManager.destoryLocationManager();
+        //unregisterReceiver(mSMSRec);
         unbindService(mServiceConnection);
         super.onDestroy();
     }
 
-    private ServiceConnection mServiceConnection = new ServiceConnection() {  
-        //当我bindService时，让TextView显示MyService里getSystemTime()方法的返回值   
-        public void onServiceConnected(ComponentName name, IBinder service) {  
-            // TODO Auto-generated method stub  
+    private ServiceConnection mServiceConnection = new ServiceConnection() {
+        // 当我bindService时，让TextView显示MyService里getSystemTime()方法的返回值
+        public void onServiceConnected(ComponentName name, IBinder service) {
+            // TODO Auto-generated method stub
             Log.e(TAG, "onServiceConnected");
-            mMyService = ((NaviAideService.MyBinder)service).getService();  
+            mMyService = ((NaviAideService.MyBinder) service).getService();
             mMyService.setCallBack(MapMode.this);
-        }  
-          
-        public void onServiceDisconnected(ComponentName name) {  
-            // TODO Auto-generated method stub  
-              
-        }  
+        }
+
+        public void onServiceDisconnected(ComponentName name) {
+            // TODO Auto-generated method stub
+
+        }
     };
 
     @Override
     public void onLocationChange(Location location) {
         if (location != null) {
-         
-//            Log.i("SuperMap", "Location changed :provider = " + location.getProvider() + " Lat: "
-//                    + location.getLatitude() + " Lng: " + location.getLongitude());
+
+            // Log.i("SuperMap", "Location changed :provider = " +
+            // location.getProvider() + " Lat: "
+            // + location.getLatitude() + " Lng: " + location.getLongitude());
             mMapController.animateTo(new GeoPoint((int) (location.getLatitude() * 1000000),
                     (int) (location.getLongitude() * 1000000)));
             mOrigin = location;
-//            Toast.makeText(getBaseContext(), "provider = " + location.getProvider() + " Lat: "
-//                    + location.getLatitude() + " Lng: " + location.getLongitude(), Toast.LENGTH_LONG).show();
+            // Toast.makeText(getBaseContext(), "provider = " +
+            // location.getProvider() + " Lat: "
+            // + location.getLatitude() + " Lng: " + location.getLongitude(),
+            // Toast.LENGTH_LONG).show();
         }
 
-    }  
+    }
     
     
 

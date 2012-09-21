@@ -28,9 +28,9 @@ public class MyLocationManager {
 
     private LocationManager mLocationManager;
 
-    private static final int MINTIME = 2000;
+    private static final int MINTIME = 5000;
 
-    private static final int MININSTANCE = 1;
+    private static final int MININSTANCE = 5;
 
     private static MyLocationManager instance;
 
@@ -82,31 +82,30 @@ public class MyLocationManager {
         return instance;
     }
 
-    private void updateLocation(Location location) {
-        lastLocation = location;
-        mCallback.onCurrentLocation(location);
-    }
+//    private void updateLocation(Location location) {
+//        lastLocation = location;
+//        mCallback.onCurrentLocation(location);
+//    }
 
     private final LocationListener locationListener = new LocationListener() {
         @Override
         public void onStatusChanged(String provider, int status, Bundle extras) {
-            Log.d(TAG, "onStatusChanged provider =" + provider + " status=" + status);
+            //Log.d(TAG, "onStatusChanged provider =" + provider + " status=" + status);
         }
 
         @Override
         public void onProviderEnabled(String provider) {
 
-            Log.d(TAG, "onProviderEnabled provider =" + provider);
+            //Log.d(TAG, "onProviderEnabled provider =" + provider);
         }
 
         @Override
         public void onProviderDisabled(String provider) {
-            Log.d(TAG, "onProviderDisabled provider =" + provider);
+            //Log.d(TAG, "onProviderDisabled provider =" + provider);
         }
 
         @Override
         public void onLocationChanged(Location location) {
-            Log.d(TAG, "onLocationChanged");
             if(LocationManager.GPS_PROVIDER.equals(location.getProvider())){
                 
                 mCallback.onCurrentLocation(location);
@@ -119,7 +118,6 @@ public class MyLocationManager {
         return lastLocation;
     }
 
-    private static int ENOUGH_LONG = 1000 * 60;
 
     public interface LocationCallBack {
         /**

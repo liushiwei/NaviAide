@@ -23,5 +23,14 @@
     <string name="sure_clean">确定要清除数据吗?</string>
     <string name="key_word">搜索内容</string>
     <string name="one_km">1公里范围内</string>
-
+    <string name="no_poi">1公里内没有您想要的兴趣点</string>
+    <string name="no_track">没有轨迹记录</string>
+    <string name="network_error">链接网络失败</string>
+    <string name="start_track">开始记录</string>
+    <string name="stop_track">停止记录</string>
+    <string name="upload">上传</string>
+    <string name="clean_all">本机记录已经全部清除</string>
+	<string name="reboot_track">重新开机后是否继续记录</string>
+	<string name="yes">是</string>
+	<string name="no">否</string>
 </resources>

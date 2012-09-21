@@ -52,10 +52,11 @@
         
         <service android:name=".NaviAideService" />
 
-       <!--  <receiver android:name="com.carit.imhere.sms.SMS_Receiver" >
+       <receiver android:name=".Boot_Receiver" >
             <intent-filter>
-                <action android:name="android.provider.Telephony.SMS_RECEIVED" />
-            </intent-filter>
+				<action android:name="android.intent.action.BOOT_COMPLETED" />
+				<category android:name="android.intent.category.DEFAULT" />
+			</intent-filter>
         </receiver> -->
     </application>
 

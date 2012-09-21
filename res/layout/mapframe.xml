@@ -205,7 +205,8 @@
         android:layout_below="@id/ToggleButton_ITSlayout"
         android:background="@android:color/transparent"
         android:paddingRight="4.0dip"
-        android:src="@drawable/btn_map_routealert" />
+        android:src="@drawable/btn_map_routealert" 
+        android:visibility="gone"/>
 
     <ImageButton
         android:id="@id/ImageButtonAR"
@@ -215,7 +216,8 @@
         android:layout_below="@id/ImageButton_RouteAlert"
         android:background="@android:color/transparent"
         android:paddingRight="4.0dip"
-        android:src="@drawable/btn_map_ar" />
+        android:src="@drawable/btn_map_ar" 
+        android:visibility="gone"/>
 
     <RelativeLayout
         android:layout_width="fill_parent"

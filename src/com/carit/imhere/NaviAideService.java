@@ -4,6 +4,7 @@ package com.carit.imhere;
 import android.app.Service;
 import android.content.ContentValues;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.location.Location;
 import android.net.Uri;
 import android.os.Binder;
@@ -13,7 +14,7 @@ import android.util.Log;
 import com.carit.imhere.MyLocationManager.LocationCallBack;
 import com.carit.imhere.provider.LocationTable;
 import com.carit.imhere.test.MockProvider;
-import com.map.projection.Projection;;;
+import com.map.projection.Projection;
 
 public class NaviAideService extends Service implements LocationCallBack {
 
@@ -24,13 +25,43 @@ public class NaviAideService extends Service implements LocationCallBack {
     private ServiceCallBack mCallBack;
 
     private MyLocationManager mMyLocationManager;
-
+    
+    private boolean isStart; 
+    
+    private boolean isTrack;
+    
+    public static final int START_TRACK = 0;
+    
+    public static final int STOP_TRACK = 1;
+    
+    public static final int BOOT_COMPLETED = 2;
+    
     @Override
     public void onStart(Intent intent, int startId) {
+        if(!isStart){
+        Log.e(TAG, "start first");
         MyLocationManager.init(NaviAideService.this.getApplicationContext(), NaviAideService.this);
         mMyLocationManager = MyLocationManager.getInstance();
         projectionThread.start();
-       
+        isStart = true;
+        }
+        int from = intent.getIntExtra("from", -1);
+        Log.e(TAG, "start service from "+ from);
+        switch(from){
+            case START_TRACK:
+                isTrack = true;
+                break;
+            case STOP_TRACK:
+                isTrack = false;
+                break;
+            case BOOT_COMPLETED:
+                SharedPreferences   user = getSharedPreferences("LocationTrack",0);
+                isTrack = user.getBoolean("reboot_track", false);
+                // = user.getString("",””);
+                //strPassword = user getString(“PASSWORD”,””);
+                break;
+                
+        }
         //super.onStart(intent, startId);
     }
 
@@ -97,9 +128,10 @@ public class NaviAideService extends Service implements LocationCallBack {
             MockProvider.getInstance().setLocation(loc);
             if (mCallBack != null)
                 mCallBack.onLocationChange(loc);
-            Log.e(TAG, "not set");
-            
+            if(isTrack){
+            Log.e(TAG, "save track");
             saveLocation(loc);
+            }
         }
 
     }
@@ -112,5 +144,8 @@ public class NaviAideService extends Service implements LocationCallBack {
         Uri uri = this.getApplicationContext().getContentResolver()
                 .insert(LocationTable.CONTENT_URI, values);
     }
+    
+   
+
 
 }

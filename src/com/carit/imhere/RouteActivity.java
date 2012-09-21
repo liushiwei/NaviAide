@@ -3,15 +3,20 @@ package com.carit.imhere;
 
 import java.util.Calendar;
 
+import com.carit.imhere.provider.LocationTable;
+
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.SharedPreferences;
+import android.content.SharedPreferences.Editor;
 import android.os.Bundle;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.Button;
 import android.widget.DatePicker;
+import android.widget.Toast;
 import android.widget.DatePicker.OnDateChangedListener;
 import android.widget.TextView;
 import android.widget.TimePicker;
@@ -52,6 +57,9 @@ public class RouteActivity extends Activity implements OnClickListener {
         findViewById(R.id.search).setOnClickListener(this);
         findViewById(R.id.search_today).setOnClickListener(this);
         findViewById(R.id.clean).setOnClickListener(this);
+        findViewById(R.id.start_track).setOnClickListener(this);
+        findViewById(R.id.stop_track).setOnClickListener(this);
+        findViewById(R.id.upload).setOnClickListener(this);
     }
 
     @Override
@@ -182,22 +190,70 @@ public class RouteActivity extends Activity implements OnClickListener {
             it.putExtra("end_time", c.getTime().getTime());
             startActivity(it);
 
-        } else if(v.getId() == R.id.clean){
+        } else if (v.getId() == R.id.clean) {
             AlertDialog.Builder builder = new AlertDialog.Builder(RouteActivity.this)
-            .setMessage(R.string.sure_clean)
-            .setIcon(android.R.drawable.ic_dialog_alert)
-            .setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
-                public void onClick(DialogInterface dialog, int whichButton) {
-                    setResult(RESULT_OK);
-                    // finish();
-                }
-            })
-            .setNegativeButton(android.R.string.cancel,
-                    new DialogInterface.OnClickListener() {
+                    .setMessage(R.string.sure_clean)
+                    .setIcon(android.R.drawable.ic_dialog_alert)
+                    .setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
                         public void onClick(DialogInterface dialog, int whichButton) {
+                            //setResult(RESULT_OK);
+                            // finish();
+                            getContentResolver().delete(LocationTable.CONTENT_URI, null, null);
+                            Toast.makeText(getBaseContext(), R.string.clean_all, Toast.LENGTH_LONG).show();
+                        }
+                    })
+                    .setNegativeButton(android.R.string.cancel,
+                            new DialogInterface.OnClickListener() {
+                                public void onClick(DialogInterface dialog, int whichButton) {
+                                }
+                            });
+            builder.show();
+        } else if (R.id.start_track == v.getId()) {
+            AlertDialog.Builder builder = new AlertDialog.Builder(RouteActivity.this)
+                    .setMessage(R.string.reboot_track).setIcon(android.R.drawable.ic_dialog_alert)
+                    .setPositiveButton(R.string.yes, new DialogInterface.OnClickListener() {
+                        public void onClick(DialogInterface dialog, int whichButton) {
+                            SharedPreferences track = getSharedPreferences("LocationTrack", 0);
+                            Editor editor = track.edit();
+                            editor.putBoolean("track", true);
+                            editor.putBoolean("reboot_track", true);
+                            editor.commit();
+                            Intent it = new Intent(Intent.ACTION_RUN);
+                            it.setClass(RouteActivity.this, NaviAideService.class);
+                            it.putExtra("from", NaviAideService.START_TRACK);
+                            RouteActivity.this.startService(it);
+                            Toast.makeText(getBaseContext(), R.string.start_track, Toast.LENGTH_LONG).show();
+                        }
+                    })
+                    .setNegativeButton(R.string.no, new DialogInterface.OnClickListener() {
+                        public void onClick(DialogInterface dialog, int whichButton) {
+                            SharedPreferences track = getSharedPreferences("LocationTrack", 0);
+                            Editor editor = track.edit();
+                            editor.putBoolean("track", true);
+                            editor.putBoolean("reboot_track", false);
+                            editor.commit();
+                            Intent it = new Intent(Intent.ACTION_RUN);
+                            it.setClass(RouteActivity.this, NaviAideService.class);
+                            it.putExtra("from", NaviAideService.START_TRACK);
+                            RouteActivity.this.startService(it);
+                            Toast.makeText(getBaseContext(), R.string.start_track, Toast.LENGTH_LONG).show();
                         }
                     });
             builder.show();
+
+        } else if (R.id.stop_track == v.getId()) {
+            SharedPreferences track = getSharedPreferences("LocationTrack", 0);
+            Editor editor = track.edit();
+            editor.putBoolean("track", false);
+            editor.putBoolean("reboot_track", false);
+            editor.commit();
+            Intent it = new Intent(Intent.ACTION_RUN);
+            it.setClass(RouteActivity.this, NaviAideService.class);
+            it.putExtra("from", NaviAideService.STOP_TRACK);
+            RouteActivity.this.startService(it);
+
+        } else if (R.id.upload == v.getId()) {
+
         }
 
     }
