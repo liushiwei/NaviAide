@@ -25,6 +25,7 @@
     <string name="one_km">1公里范围内</string>
     <string name="no_poi">1公里内没有您想要的兴趣点</string>
     <string name="no_track">没有轨迹记录</string>
+    <string name="not_get_location">没有获得当前位置</string>
     <string name="network_error">链接网络失败</string>
     <string name="start_track">开始记录</string>
     <string name="stop_track">停止记录</string>

@@ -105,6 +105,8 @@ public class MapMode extends MapActivity implements OnClickListener, ServiceCall
     public static final int NETWORKERROR = 0x104;
     
     public static final int NOTRACK = 0x105;
+    
+    public static final int NOTGETLOCATION = 0x106;
 
     public static final int GET_PATH = 0x201;
 
@@ -188,6 +190,9 @@ public class MapMode extends MapActivity implements OnClickListener, ServiceCall
                 case NOTRACK:
                     Toast.makeText(getBaseContext(), R.string.no_track, Toast.LENGTH_LONG).show();
                     break;
+                case NOTGETLOCATION:
+                    Toast.makeText(getBaseContext(), R.string.not_get_location, Toast.LENGTH_LONG).show();
+                    break;
             }
             super.handleMessage(msg);
         }
@@ -215,14 +220,14 @@ public class MapMode extends MapActivity implements OnClickListener, ServiceCall
         // 设置地图支持缩放
         mMapView.setBuiltInZoomControls(true);
 
-        mOrigin = new Location(LocationManager.NETWORK_PROVIDER);
-        mOrigin.setLatitude(22.541949);
-        mOrigin.setLongitude(113.989629);
-        mGeoPoint = new GeoPoint((int) (22.541949 * 1000000), (int) (113.989629 * 1000000));
+//        mOrigin = new Location(LocationManager.NETWORK_PROVIDER);
+//        mOrigin.setLatitude(22.541949);
+//        mOrigin.setLongitude(113.989629);
+        //mGeoPoint = new GeoPoint((int) (22.541949 * 1000000), (int) (113.989629 * 1000000));
 
         // 定位到深圳
 
-        mMapController.animateTo(mGeoPoint);
+        //mMapController.animateTo(mGeoPoint);
         // 设置倍数(1-21)
         mMapController.setZoom(18);
 
@@ -398,6 +403,7 @@ public class MapMode extends MapActivity implements OnClickListener, ServiceCall
         mPassPinDrawable = getResources().getDrawable(R.drawable.pin_purple);
         mLongPressOverlay = new LongPressOverlay(this, mMapView, mMapController, mPassPinDrawable);
         list.add(mLongPressOverlay);
+        findViewById(R.id.ImageButtonMyloc);
     }
     /**
      * 发送请求，打开GPS
@@ -595,6 +601,10 @@ public class MapMode extends MapActivity implements OnClickListener, ServiceCall
     }
 
     public void getPath(GeoPoint point, GeoPoint[] passPoint) {
+        if(mOrigin == null){
+            mHandler.sendEmptyMessage(NOTGETLOCATION);
+            return;
+        }
         if (mPopNoBtnView != null && mPopNoBtnView.isShown()) {
             mPopNoBtnView.setVisibility(View.GONE);
         }
@@ -670,7 +680,7 @@ public class MapMode extends MapActivity implements OnClickListener, ServiceCall
                                 mStartPinDrawable.getIntrinsicWidth() / 2, 0);
                         mPathOverlay = new PathOverlay(points, mMapView, mPopNoBtnView,
                                 mMapController, mPathPinDrawable);
-
+                        mPathOverlay.getOverlays().clear();
                         OverlayItem overlayItem = new OverlayItem(points.get(0),
                                 getString(R.string.full)
                                         + mDirections.getRoutes()[0].getLegs()[0].getDistance()
@@ -682,8 +692,8 @@ public class MapMode extends MapActivity implements OnClickListener, ServiceCall
                         // OverlayItem overlayItem=null;
                         for (Step step : mDirections.getRoutes()[0].getLegs()[0].getSteps()) {
                             overlayItem = new OverlayItem(new GeoPoint((int) (step
-                                    .getEnd_location().getLat() * 1E6), (int) (step
-                                    .getEnd_location().getLng() * 1E6)),
+                                    .getStart_location().getLat() * 1E6), (int) (step
+                                    .getStart_location().getLng() * 1E6)),
                                     step.getHtml_instructions(), step.getDistance().getText() + "-"
                                             + step.getDuration().getText());
                             mPathOverlay.addOverlay(overlayItem);
@@ -691,8 +701,12 @@ public class MapMode extends MapActivity implements OnClickListener, ServiceCall
 
                         mMapView.getOverlays().add(mPathOverlay);
                     } else {
+                        
                         mPathOverlay.setPoints(decodePoly(mDirections.getRoutes()[0]
                                 .getOverview_polyline().getPoints()));
+                        mPathOverlay.getPoints().add(0,new GeoPoint((int) (mOrigin.getLatitude() * 1E6), (int) (mOrigin
+                                        .getLongitude() * 1E6)));
+                        mPathOverlay.getPoints().add(mDestination);
                         mPathOverlay.getOverlays().clear();
                         OverlayItem overlayItem = new OverlayItem(points.get(0),
                                 getString(R.string.full)
@@ -848,6 +862,9 @@ public class MapMode extends MapActivity implements OnClickListener, ServiceCall
             Log.e(TAG, "onServiceConnected");
             mMyService = ((NaviAideService.MyBinder) service).getService();
             mMyService.setCallBack(MapMode.this);
+            mOrigin = mMyService.getLastLocation();
+            if(mOrigin!=null)
+            mMapController.animateTo(new GeoPoint((int)(mOrigin.getLatitude()*1E6),(int)(mOrigin.getLongitude()*1E6)));
         }
 
         public void onServiceDisconnected(ComponentName name) {
@@ -863,8 +880,8 @@ public class MapMode extends MapActivity implements OnClickListener, ServiceCall
             // Log.i("SuperMap", "Location changed :provider = " +
             // location.getProvider() + " Lat: "
             // + location.getLatitude() + " Lng: " + location.getLongitude());
-            mMapController.animateTo(new GeoPoint((int) (location.getLatitude() * 1000000),
-                    (int) (location.getLongitude() * 1000000)));
+//            mMapController.animateTo(new GeoPoint((int) (location.getLatitude() * 1000000),
+//                    (int) (location.getLongitude() * 1000000)));
             mOrigin = location;
             // Toast.makeText(getBaseContext(), "provider = " +
             // location.getProvider() + " Lat: "

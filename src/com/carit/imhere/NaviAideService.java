@@ -26,6 +26,8 @@ public class NaviAideService extends Service implements LocationCallBack {
 
     private MyLocationManager mMyLocationManager;
     
+    private Location mLastLocation ;
+    
     private boolean isStart; 
     
     private boolean isTrack;
@@ -45,6 +47,8 @@ public class NaviAideService extends Service implements LocationCallBack {
         projectionThread.start();
         isStart = true;
         }
+        if(mLastLocation!=null)
+            MockProvider.getInstance().setLocation(mLastLocation);
         int from = intent.getIntExtra("from", -1);
         Log.e(TAG, "start service from "+ from);
         switch(from){
@@ -67,18 +71,20 @@ public class NaviAideService extends Service implements LocationCallBack {
 
     @Override
     public IBinder onBind(Intent intent) {
-        // TODO Auto-generated method stub
+        Log.e(TAG, "onUnbind");
+       
         return mBinder;
     }
 
     @Override
     public boolean onUnbind(Intent intent) {
-        // TODO Auto-generated method stub
+        Log.e(TAG, "onUnbind");
         return super.onUnbind(intent);
     }
 
     @Override
     public void onDestroy() {
+        Log.e(TAG, "onDestroy");
         mMyLocationManager.destoryLocationManager();
         super.onDestroy();
     }
@@ -125,6 +131,7 @@ public class NaviAideService extends Service implements LocationCallBack {
             loc.setLongitude(latlng[1]);
             loc.setTime(System.currentTimeMillis());
             loc.setAltitude(100);
+            mLastLocation = loc;
             MockProvider.getInstance().setLocation(loc);
             if (mCallBack != null)
                 mCallBack.onLocationChange(loc);
@@ -146,6 +153,9 @@ public class NaviAideService extends Service implements LocationCallBack {
     }
     
    
+    public Location getLastLocation(){
+        return mLastLocation;
+    }
 
 
 }
