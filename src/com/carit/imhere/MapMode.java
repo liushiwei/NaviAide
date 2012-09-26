@@ -8,36 +8,30 @@ import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.List;
 
-import android.app.AlertDialog;
-import android.app.Dialog;
-import android.app.PendingIntent;
-import android.app.PendingIntent.CanceledException;
-import android.content.BroadcastReceiver;
+import android.app.ProgressDialog;
 import android.content.ComponentName;
 import android.content.ContentResolver;
 import android.content.Context;
-import android.content.DialogInterface;
 import android.content.Intent;
-import android.content.IntentFilter;
 import android.content.ServiceConnection;
 import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.Bitmap.CompressFormat;
 import android.graphics.Canvas;
+import android.graphics.Point;
 import android.graphics.drawable.Drawable;
-import android.location.Criteria;
 import android.location.Location;
 import android.location.LocationManager;
-import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
 import android.os.Message;
 import android.provider.Settings;
-import android.telephony.SmsMessage;
 import android.util.Log;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.View.OnClickListener;
+import android.view.View.OnTouchListener;
 import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemClickListener;
 import android.widget.CompoundButton;
@@ -55,7 +49,6 @@ import com.carit.imhere.obj.Place;
 import com.carit.imhere.obj.PlaceSearchResult;
 import com.carit.imhere.obj.Step;
 import com.carit.imhere.provider.LocationTable;
-import com.carit.imhere.test.MockProvider;
 import com.google.android.maps.GeoPoint;
 import com.google.android.maps.MapActivity;
 import com.google.android.maps.MapController;
@@ -155,6 +148,11 @@ public class MapMode extends MapActivity implements OnClickListener, ServiceCall
     private LongPressOverlay mLongPressOverlay;
 
     private MyLocationOverlay mMylocationOverlay;
+    
+    private RailOverlay mRailoverlay;
+    
+    protected NaviAideService mMyService;
+
 
     private Handler mHandler = new Handler() {
 
@@ -170,6 +168,31 @@ public class MapMode extends MapActivity implements OnClickListener, ServiceCall
                     view = findViewById(R.id.progress_loc);
                     view.setVisibility(View.GONE);
                     if (msg.arg1 != GET_PATH) {
+                        ListView listView = (ListView) findViewById(R.id.placeSearchList);
+                        mAdapter = new ParkingAdapter(getBaseContext(), mPlaces, R.layout.place_list_item);
+                        listView.setAdapter(mAdapter);
+                        listView.setOnItemClickListener(new OnItemClickListener() {
+
+                            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                                // TODO Auto-generated method stub
+                                mMapController.animateTo(mPoints.get(position));
+
+                                TextView title_TextView = (TextView) mPopView.findViewById(R.id.ImageButton01);
+                                title_TextView.setText(mPlaces.getResults()[position].getName());
+                                TextView desc_TextView = (TextView) mPopView.findViewById(R.id.TextView02);
+                                desc_TextView.setText(mPlaces.getResults()[position].getVicinity());
+                                mPopView.findViewById(R.id.ImageButtonRight).setTag(mPoints.get(position));
+                                MapView.LayoutParams params = (MapView.LayoutParams) mPopView.getLayoutParams();
+                                params.x = mPinDrawable.getBounds().centerX();// Y轴偏移
+                                params.y = -mPinDrawable.getBounds().height();// Y轴偏移
+                                params.point = mPoints.get(position);
+                                mMapView.updateViewLayout(mPopView, params);
+                                mPopView.setVisibility(View.VISIBLE);
+                            }
+
+                        });
+                        findViewById(R.id.show).setOnClickListener(MapMode.this);
+                        findViewById(R.id.hide).setOnClickListener(MapMode.this);
                         View list = findViewById(R.id.placeSearchResult);
                         list.setVisibility(View.VISIBLE);
                         mAdapter.setResult(mPlaces);
@@ -199,7 +222,7 @@ public class MapMode extends MapActivity implements OnClickListener, ServiceCall
 
     };
 
-    protected NaviAideService mMyService;
+
 
     /** Called when the activity is first created. */
     @Override
@@ -319,6 +342,21 @@ public class MapMode extends MapActivity implements OnClickListener, ServiceCall
      */
     private void init(){
         // 添加Overlay，用于显示标注信息
+//        mMapView.setOnTouchListener(new OnTouchListener() {
+//            
+//            @Override
+//            public boolean onTouch(View v, MotionEvent event) {
+//                Log.e(TAG, "x="+event.getX()+",y="+event.getY()+" code="+event.getAction());
+//                if(MotionEvent.ACTION_DOWN==event.getAction()){
+//                    mRailoverlay.setLeftTop(new Point((int)event.getX(),(int)event.getY()));
+//                    mRailoverlay.setRightBelow(new Point((int)event.getX(),(int)event.getY()));
+//                }else{
+//                    mRailoverlay.setRightBelow(new Point((int)event.getX(),(int)event.getY()));
+//                }
+//                mMapView.invalidate();
+//                return true;
+//            }
+//        });
         mMylocationOverlay = new MyLocationOverlay(getBaseContext(), mMapView);
         mMylocationOverlay.runOnFirstFix(new Thread() {
 
@@ -328,12 +366,25 @@ public class MapMode extends MapActivity implements OnClickListener, ServiceCall
                         + mMylocationOverlay.getMyLocation().getLatitudeE6() + " lng="
                         + mMylocationOverlay.getMyLocation().getLongitudeE6());
                 mMapController.animateTo(mMylocationOverlay.getMyLocation());
+                if(mOrigin!=null){
+                    mOrigin.setLatitude(mMylocationOverlay.getMyLocation().getLatitudeE6()/1E6);
+                    mOrigin.setLongitude(mMylocationOverlay.getMyLocation().getLongitudeE6()/1E6);
+                }else{
+                    //mOrigin = 
+                    mOrigin = mMylocationOverlay.getLastFix();
+                }
+                if (mtypes != null) {
+                    queryPoi(null, mtypes);
+                }
                 super.run();
             }
 
         });
         List<Overlay> list = mMapView.getOverlays();
 
+        //电子栅栏
+//        mRailoverlay = new RailOverlay();
+//        list.add(mRailoverlay);
         list.add(mMylocationOverlay);
 
         ToggleButton its = (ToggleButton) findViewById(R.id.ToggleButton_ITS);
@@ -349,34 +400,11 @@ public class MapMode extends MapActivity implements OnClickListener, ServiceCall
 
             }
         });
-        findViewById(R.id.ImageButtonAR).setOnClickListener(this);
-        findViewById(R.id.show).setOnClickListener(this);
-        findViewById(R.id.hide).setOnClickListener(this);
+        //findViewById(R.id.ImageButtonAR).setOnClickListener(this);
+        
         findViewById(R.id.ImageButtonHotkey).setOnClickListener(this);
 
-        ListView listView = (ListView) findViewById(R.id.placeSearchList);
-        mAdapter = new ParkingAdapter(getBaseContext(), mPlaces, R.layout.place_list_item);
-        listView.setAdapter(mAdapter);
-        listView.setOnItemClickListener(new OnItemClickListener() {
-
-            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                // TODO Auto-generated method stub
-                mMapController.animateTo(mPoints.get(position));
-
-                TextView title_TextView = (TextView) mPopView.findViewById(R.id.ImageButton01);
-                title_TextView.setText(mPlaces.getResults()[position].getName());
-                TextView desc_TextView = (TextView) mPopView.findViewById(R.id.TextView02);
-                desc_TextView.setText(mPlaces.getResults()[position].getVicinity());
-                mPopView.findViewById(R.id.ImageButtonRight).setTag(mPoints.get(position));
-                MapView.LayoutParams params = (MapView.LayoutParams) mPopView.getLayoutParams();
-                params.x = mPinDrawable.getBounds().centerX();// Y轴偏移
-                params.y = -mPinDrawable.getBounds().height();// Y轴偏移
-                params.point = mPoints.get(position);
-                mMapView.updateViewLayout(mPopView, params);
-                mPopView.setVisibility(View.VISIBLE);
-            }
-
-        });
+        
 
         // 初始化气泡,并设置为不可见
         mPopView = View.inflate(this, R.layout.popup, null);
@@ -461,20 +489,23 @@ public class MapMode extends MapActivity implements OnClickListener, ServiceCall
         if(CAR_ROUTE!=mViewType){
             init();
         }
-        if (mtypes != null) {
-            queryPoi(null, mtypes);
-        }
+        
     }
 
     private void queryPoi(String keyWord, String type) {
         String url = null;
+        if(mOrigin == null){
+            mHandler.sendEmptyMessage(NOTGETLOCATION);
+            return;
+        }
+        String origin = mOrigin.getLatitude() + "," + mOrigin.getLongitude();
         if (keyWord == null)
             url = "https://maps.googleapis.com/maps/api/place/search/json?location="
-                    + "22.538928,113.994162" + "&radius=" + mRadius + "&types=" + type
+                    + origin + "&radius=" + mRadius + "&types=" + type
                     + "&sensor=true&key=AIzaSyDbYqd7KvrZhqffpw4YfMsDreKgk9MuGJM&language=zh-CN";
         else
             url = "https://maps.googleapis.com/maps/api/place/search/json?location="
-                    + "22.538928,113.994162" + "&radius=" + mRadius + "&types=" + type + "&name="
+                    + origin + "&radius=" + mRadius + "&types=" + type + "&name="
                     + keyWord
                     + "&sensor=true&key=AIzaSyDbYqd7KvrZhqffpw4YfMsDreKgk9MuGJM&language=zh-CN";
         HttpThread thread = new HttpThread(url, new HttpThreadListener() {

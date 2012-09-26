@@ -30,8 +30,11 @@
     <string name="start_track">开始记录</string>
     <string name="stop_track">停止记录</string>
     <string name="upload">上传</string>
+    <string name="upload_today">上传今天</string>
     <string name="clean_all">本机记录已经全部清除</string>
 	<string name="reboot_track">重新开机后是否继续记录</string>
 	<string name="yes">是</string>
 	<string name="no">否</string>
+	<string name="getting_location">正在获取位置&#8230;&#8230;&#8230;</string>
+	<string name="date_format">yyyy-MM-dd HH:mm</string>
 </resources>
