@@ -12,13 +12,14 @@ import android.app.ProgressDialog;
 import android.content.ComponentName;
 import android.content.ContentResolver;
 import android.content.Context;
+import android.content.DialogInterface;
+import android.content.DialogInterface.OnKeyListener;
 import android.content.Intent;
 import android.content.ServiceConnection;
 import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.Bitmap.CompressFormat;
 import android.graphics.Canvas;
-import android.graphics.Point;
 import android.graphics.drawable.Drawable;
 import android.location.Location;
 import android.location.LocationManager;
@@ -28,10 +29,9 @@ import android.os.IBinder;
 import android.os.Message;
 import android.provider.Settings;
 import android.util.Log;
-import android.view.MotionEvent;
+import android.view.KeyEvent;
 import android.view.View;
 import android.view.View.OnClickListener;
-import android.view.View.OnTouchListener;
 import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemClickListener;
 import android.widget.CompoundButton;
@@ -49,6 +49,7 @@ import com.carit.imhere.obj.Place;
 import com.carit.imhere.obj.PlaceSearchResult;
 import com.carit.imhere.obj.Step;
 import com.carit.imhere.provider.LocationTable;
+import com.carit.imhere.test.MockProvider;
 import com.google.android.maps.GeoPoint;
 import com.google.android.maps.MapActivity;
 import com.google.android.maps.MapController;
@@ -101,6 +102,8 @@ public class MapMode extends MapActivity implements OnClickListener, ServiceCall
     
     public static final int NOTGETLOCATION = 0x106;
 
+    public static final int GETLOCATION = 0x107;
+    
     public static final int GET_PATH = 0x201;
 
     private int mRadius = 1000;
@@ -153,7 +156,10 @@ public class MapMode extends MapActivity implements OnClickListener, ServiceCall
     
     protected NaviAideService mMyService;
 
+    private ProgressDialog mProgDialog;
 
+   
+    
     private Handler mHandler = new Handler() {
 
         @Override
@@ -216,11 +222,16 @@ public class MapMode extends MapActivity implements OnClickListener, ServiceCall
                 case NOTGETLOCATION:
                     Toast.makeText(getBaseContext(), R.string.not_get_location, Toast.LENGTH_LONG).show();
                     break;
+                case GETLOCATION:
+                    mProgDialog.dismiss();
+                    break;
             }
             super.handleMessage(msg);
         }
 
     };
+
+    
 
 
 
@@ -312,15 +323,15 @@ public class MapMode extends MapActivity implements OnClickListener, ServiceCall
         mMylocationOverlay.enableCompass();
         mMylocationOverlay.enableMyLocation();
         }
-        // Location location = new Location(MockProvider.MODK_PROVIDER);
-        // location.setLatitude(22.538928);
-        // location.setLongitude(113.994162);
-        // location.setTime(System.currentTimeMillis());
-        // location.setAltitude(100);
-
-        // MockProvider.getInstance()
-        // .init((LocationManager) getSystemService(Context.LOCATION_SERVICE))
-        // .setLocation(location);
+//         Location location = new Location(MockProvider.MODK_PROVIDER);
+//         location.setLatitude(22.538928);
+//         location.setLongitude(113.994162);
+//         location.setTime(System.currentTimeMillis());
+//         location.setAltitude(100);
+//
+//         MockProvider.getInstance()
+//         .init((LocationManager) getSystemService(Context.LOCATION_SERVICE))
+//         .setLocation(location);
         // MockProvider.getInstance().init((LocationManager)
         Intent i = new Intent();
         i.setClass(this, NaviAideService.class);
@@ -357,6 +368,16 @@ public class MapMode extends MapActivity implements OnClickListener, ServiceCall
 //                return true;
 //            }
 //        });
+        mProgDialog = ProgressDialog.show(MapMode.this, null, getString(R.string.getting_location), true, false);
+        mProgDialog.setOnKeyListener(new OnKeyListener() {
+            
+            @Override
+            public boolean onKey(DialogInterface dialog, int keyCode, KeyEvent event) {
+                if(KeyEvent.KEYCODE_BACK==keyCode)
+                    MapMode.this.finish();
+                return false;
+            }
+        });
         mMylocationOverlay = new MyLocationOverlay(getBaseContext(), mMapView);
         mMylocationOverlay.runOnFirstFix(new Thread() {
 
@@ -374,6 +395,7 @@ public class MapMode extends MapActivity implements OnClickListener, ServiceCall
                     mOrigin = mMylocationOverlay.getLastFix();
                 }
                 if (mtypes != null) {
+                    mHandler.sendEmptyMessageDelayed(GETLOCATION, 500);
                     queryPoi(null, mtypes);
                 }
                 super.run();
@@ -549,7 +571,7 @@ public class MapMode extends MapActivity implements OnClickListener, ServiceCall
                 }
 
             }
-        });
+        },false);
         thread.start();
     }
 
@@ -764,7 +786,7 @@ public class MapMode extends MapActivity implements OnClickListener, ServiceCall
                 mHandler.obtainMessage(HTTP_HTREAD_COMPLETE, GET_PATH, 0).sendToTarget();
 
             }
-        });
+        },false);
         thread.start();
 
     }

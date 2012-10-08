@@ -9,6 +9,7 @@ import android.content.Context;
 import android.content.UriMatcher;
 import android.database.Cursor;
 import android.database.SQLException;
+import android.database.sqlite.SQLiteConstraintException;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.database.sqlite.SQLiteQueryBuilder;
@@ -103,6 +104,7 @@ public class LocationProvider extends ContentProvider{
 
 
         SQLiteDatabase db = mOpenHelper.getWritableDatabase();
+        try{
         long rowId = db.insert(LOCATION_TABLE, LocationTable._ID, value);
         if (rowId > 0) {
             Uri noteUri = ContentUris.withAppendedId(LocationTable.CONTENT_URI, rowId);
@@ -110,7 +112,11 @@ public class LocationProvider extends ContentProvider{
             return noteUri;
         }
 
-        throw new SQLException("Failed to insert row into " + uri);
+        //throw new SQLException("Failed to insert row into " + uri);
+        }catch (SQLiteConstraintException e) {
+           e.printStackTrace();
+        }
+        return null;
     }
 
     @Override
@@ -162,7 +168,8 @@ public class LocationProvider extends ContentProvider{
                     +"bearing TEXT," 
                     +"accuracy TEXT" 
                     +");");
-                 }
+             db.execSQL("CREATE UNIQUE INDEX [time] ON [location_table] ([time]);");
+        }
 
         @Override
         public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {

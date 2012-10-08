@@ -37,4 +37,8 @@
 	<string name="no">否</string>
 	<string name="getting_location">正在获取位置&#8230;&#8230;&#8230;</string>
 	<string name="date_format">yyyy-MM-dd HH:mm</string>
+	<string name="download">同步</string>
+    <string name="download_today">同步今天</string>
+    <string name="download_all">同步全部</string>
+    <string name="wrong_time">请正确设置时间</string>
 </resources>
