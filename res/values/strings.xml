@@ -22,7 +22,7 @@
     <string name="setup">设置</string>
     <string name="sure_clean">确定要清除数据吗?</string>
     <string name="key_word">搜索内容</string>
-    <string name="one_km">1公里范围内</string>
+    <string name="search_range">%1$d公里范围内</string>
     <string name="no_poi">1公里内没有您想要的兴趣点</string>
     <string name="no_track">没有轨迹记录</string>
     <string name="not_get_location">没有获得当前位置</string>

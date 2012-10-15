@@ -49,7 +49,6 @@ import com.carit.imhere.obj.Place;
 import com.carit.imhere.obj.PlaceSearchResult;
 import com.carit.imhere.obj.Step;
 import com.carit.imhere.provider.LocationTable;
-import com.carit.imhere.test.MockProvider;
 import com.google.android.maps.GeoPoint;
 import com.google.android.maps.MapActivity;
 import com.google.android.maps.MapController;
@@ -158,7 +157,9 @@ public class MapMode extends MapActivity implements OnClickListener, ServiceCall
 
     private ProgressDialog mProgDialog;
 
+    private int [] mRangeArray=new int[]{1000,2000,3000,5000};
    
+    private int mCurrentRange =0;
     
     private Handler mHandler = new Handler() {
 
@@ -187,18 +188,25 @@ public class MapMode extends MapActivity implements OnClickListener, ServiceCall
                                 title_TextView.setText(mPlaces.getResults()[position].getName());
                                 TextView desc_TextView = (TextView) mPopView.findViewById(R.id.TextView02);
                                 desc_TextView.setText(mPlaces.getResults()[position].getVicinity());
-                                mPopView.findViewById(R.id.ImageButtonRight).setTag(mPoints.get(position));
+                                mPopView.findViewById(R.id.poi1).findViewById(R.id.ImageButtonRight).setTag(mPoints.get(position));
                                 MapView.LayoutParams params = (MapView.LayoutParams) mPopView.getLayoutParams();
                                 params.x = mPinDrawable.getBounds().centerX();// Y轴偏移
                                 params.y = -mPinDrawable.getBounds().height();// Y轴偏移
                                 params.point = mPoints.get(position);
                                 mMapView.updateViewLayout(mPopView, params);
+                                mPopView.findViewById(R.id.poi1).setVisibility(View.VISIBLE);
+                                mPopView.findViewById(R.id.poi2).setVisibility(View.GONE);
+                                mPopView.findViewById(R.id.poi3).setVisibility(View.GONE);
+                                mPopView.findViewById(R.id.poi4).setVisibility(View.GONE);
                                 mPopView.setVisibility(View.VISIBLE);
                             }
 
                         });
                         findViewById(R.id.show).setOnClickListener(MapMode.this);
                         findViewById(R.id.hide).setOnClickListener(MapMode.this);
+                        findViewById(R.id.change_range).setOnClickListener(MapMode.this);
+                        String text = String.format(getString(R.string.search_range), mRangeArray[mCurrentRange]/1000);
+                        ((TextView)findViewById(R.id.search_range)).setText(text);
                         View list = findViewById(R.id.placeSearchResult);
                         list.setVisibility(View.VISIBLE);
                         mAdapter.setResult(mPlaces);
@@ -340,17 +348,7 @@ public class MapMode extends MapActivity implements OnClickListener, ServiceCall
         super.onResume();
     }
 
-    /*
-     * @Override protected Dialog onCreateDialog(int id) { // TODO
-     * Auto-generated method stub switch (id) { case 0: return new
-     * AlertDialog.Builder(MapMode.this).setMessage("您确定要打开GPS吗？")
-     * .setPositiveButton("确定", new DialogInterface.OnClickListener() { public
-     * void onClick(DialogInterface dialog, int which) { // TODO Auto-generated
-     * method stub toggleGPS(); } }).setNegativeButton("取消", new
-     * DialogInterface.OnClickListener() { public void onClick(DialogInterface
-     * dialog, int which) { // TODO Auto-generated method stub } }).create(); }
-     * return super.onCreateDialog(id); }
-     */
+    
     private void init(){
         // 添加Overlay，用于显示标注信息
 //        mMapView.setOnTouchListener(new OnTouchListener() {
@@ -523,11 +521,11 @@ public class MapMode extends MapActivity implements OnClickListener, ServiceCall
         String origin = mOrigin.getLatitude() + "," + mOrigin.getLongitude();
         if (keyWord == null)
             url = "https://maps.googleapis.com/maps/api/place/search/json?location="
-                    + origin + "&radius=" + mRadius + "&types=" + type
+                    + origin + "&radius=" + mRangeArray[mCurrentRange] + "&types=" + type
                     + "&sensor=true&key=AIzaSyDbYqd7KvrZhqffpw4YfMsDreKgk9MuGJM&language=zh-CN";
         else
             url = "https://maps.googleapis.com/maps/api/place/search/json?location="
-                    + origin + "&radius=" + mRadius + "&types=" + type + "&name="
+                    + origin + "&radius=" + mRangeArray[mCurrentRange] + "&types=" + type + "&name="
                     + keyWord
                     + "&sensor=true&key=AIzaSyDbYqd7KvrZhqffpw4YfMsDreKgk9MuGJM&language=zh-CN";
         HttpThread thread = new HttpThread(url, new HttpThreadListener() {
@@ -614,6 +612,13 @@ public class MapMode extends MapActivity implements OnClickListener, ServiceCall
                     EditText text = (EditText) findViewById(R.id.TextViewSearch);
                     String keyWord = text.getText().toString().trim().replaceAll(" ", "|");
                     queryPoi(keyWord, mtypes);
+                    break;
+                case R.id.change_range:
+                    Log.e(TAG, "change_range");
+                    mCurrentRange = ++mCurrentRange==mRangeArray.length?0:mCurrentRange; 
+                    
+                    queryPoi(null, mtypes);
+                    
                     break;
             }
         }
