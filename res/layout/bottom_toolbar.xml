@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8"?>
+<merge xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent" >
+
+    <LinearLayout
+        android:id="@+id/bottom_toolbar"
+        android:layout_width="fill_parent"
+        android:layout_height="65px"
+        android:layout_gravity="bottom"
+        android:background="@drawable/bottom_toolbar_bg"
+        android:orientation="horizontal" >
+
+        <ImageButton
+            android:id="@+id/btn_home"
+            android:layout_width="110px"
+            android:layout_height="wrap_content"
+            android:layout_gravity="left|bottom"
+            android:background="#00000000"
+            android:src="@drawable/button_home" />
+
+        <LinearLayout
+            android:layout_width="fill_parent"
+            android:layout_height="fill_parent"
+            android:layout_weight="1"
+            android:gravity="center"
+            android:paddingLeft="10px"
+            android:paddingRight="10px" >
+
+            <TextView
+                android:id="@+id/label"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textColor="@android:color/white"
+                android:text="@string/label"
+                android:textAppearance="?android:attr/textAppearanceLarge" />
+            
+        </LinearLayout>
+
+        <ImageButton
+            android:id="@+id/btn_back"
+            android:layout_width="110px"
+            android:layout_height="wrap_content"
+            android:layout_gravity="right|bottom"
+            android:background="@drawable/button_back" />
+    </LinearLayout>
+
+</merge>

@@ -23,77 +23,6 @@ public class MainActivity extends Activity {
     public void onClick(View view){
         Intent it = null;
         switch(view.getId()){
-            case R.id.atmwz:
-                it = new Intent();
-                it.setClassName("com.findatmwemi", "com.findatmwemi.main");
-                startActivity(it);
-                break;
-            case R.id.bddt:
-                it = new Intent();
-                it.setClassName("com.baidu.BaiduMap", "com.baidu.BaiduMap.BaiduMap");
-                startActivity(it);
-                break;
-            case R.id.changxing:
-                it = new Intent();
-                it.setClassName("net.loopu.express", "net.loopu.express.WelcomeActivity");
-                startActivity(it);
-                break;
-            case R.id.gdcyh:
-                it = new Intent();
-                it.setClassName("com.autonavi.cvc.app.aac", "com.autonavi.cvc.app.aac.ui.actvy.ActvySplash");
-                startActivity(it);
-                break;
-            case R.id.hbgj:
-                it = new Intent();
-                it.setClassName("com.flightmanager.view", "com.flightmanager.view.Loading");
-                startActivity(it);
-                break;
-            case R.id.hlzh:
-                it = new Intent();
-                it.setClassName("com.umetrip.android.msky", "com.umetrip.android.msky.activity.SplashActivity");
-                startActivity(it);
-                break;
-            case R.id.jddr:
-                it = new Intent();
-                it.setClassName("cn.ikamobile.hotelfinder", "cn.ikamobile.hotelfinder.HotelFinderActivity");
-                startActivity(it);
-                break;
-            case R.id.kaka:
-                it = new Intent();
-                it.setClassName("cn.mucang.kaka.android", "cn.mucang.kaka.android.Login");
-                startActivity(it);
-                break;
-            case R.id.sslk:
-                it = new Intent();
-                it.setClassName("com.wxcs", "com.wxcs.wxcs");
-                startActivity(it);
-                break;
-            case R.id.czjt:
-                it = new Intent();
-                it.setClassName("com.heiwen.carinjt.activity", "com.heiwen.carinjt.activity.Main");
-                startActivity(it);
-                break;
-           case R.id.lrts:
-                it = new Intent();
-                it.setClassName("bubei.tingshu", "bubei.tingshu.ui.Home");
-                startActivity(it);
-                break;
-           case R.id.bdyy:
-                it = new Intent();
-                it.setClassName("com.ting.mp3.android", "com.ting.mp3.android.SplashActivity");
-                startActivity(it);
-                break;
-            /*
-             * case R.id.bddt:
-                it = new Intent();
-                it.setClassName("com.baidu.BaiduMap", "com.baidu.BaiduMap.BaiduMap");
-                startActivity(it);
-                break;
-            case R.id.bddt:
-                it = new Intent();
-                it.setClassName("com.baidu.BaiduMap", "com.baidu.BaiduMap.BaiduMap");
-                startActivity(it);
-                break;*/
            case R.id.parking:
                it = new Intent(getBaseContext(),MapMode.class);
                it.putExtra("hotkey", MapMode.PARKING);
@@ -124,15 +53,30 @@ public class MainActivity extends Activity {
                it.putExtra("hotkey", MapMode.CAR_REPAIR);
                startActivity(it);
                break;
-           case R.id.sport:
+           case R.id.hotel:
                it = new Intent(getBaseContext(),MapMode.class);
-               it.putExtra("hotkey", MapMode.SPORT);
+               it.putExtra("hotkey", MapMode.LODGING);
                startActivity(it);
                break;
                
            case R.id.car_dealer:
                it = new Intent(getBaseContext(),MapMode.class);
                it.putExtra("hotkey", MapMode.CAR_DEALER);
+               startActivity(it);
+               break;
+           case R.id.shopping:
+               it = new Intent(getBaseContext(),MapMode.class);
+               it.putExtra("hotkey", MapMode.SHOPPING);
+               startActivity(it);
+               break;
+           case R.id.medical:
+               it = new Intent(getBaseContext(),MapMode.class);
+               it.putExtra("hotkey", MapMode.MEDICAL);
+               startActivity(it);
+               break;
+           case R.id.traffic:
+               it = new Intent(getBaseContext(),MapMode.class);
+               it.putExtra("hotkey", MapMode.TRAFFIC);
                startActivity(it);
                break;
            case R.id.car_route:

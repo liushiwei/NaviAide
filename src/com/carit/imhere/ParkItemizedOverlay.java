@@ -26,7 +26,7 @@ import com.google.android.maps.Projection;
 @SuppressWarnings("rawtypes")
 public class ParkItemizedOverlay extends ItemizedOverlay implements OnFocusChangeListener,
         OnClickListener {
-    private static final String TAG = "MItemizedOverlay";
+    private static final String TAG = "ParkItemizedOverlay";
 
     private List<OverlayItem> overlays = new ArrayList<OverlayItem>();
 
@@ -118,7 +118,6 @@ public class ParkItemizedOverlay extends ItemizedOverlay implements OnFocusChang
 
     @Override
     public void onFocusChanged(ItemizedOverlay overlay, OverlayItem newFocus) {
-        Log.d(TAG, "item focus changed!");
         if (null != newFocus) {
             // Log.d(TAG , "centerY : " + itemDrawable.getBounds().centerY() +
             // "; centerX :" + itemDrawable.getBounds().centerX());
@@ -178,25 +177,19 @@ public class ParkItemizedOverlay extends ItemizedOverlay implements OnFocusChang
         Point out = new Point();
         int size = 30;
         projection.toPixels(newFocus.getPoint(), out);
-        Log.d(TAG, "newFocus" + newFocus.getPoint().toString());
         Rect rect = new Rect(out.x - size, out.y - size, out.x + size, out.y + size);
-        Log.d(TAG, "getNearItem rect = " + rect.centerX() + "-" + rect.centerY() + " left"
-                + rect.left + " top" + rect.top + " right" + rect.right + " bottom" + rect.bottom);
+       
         items.add(newFocus);
         for (int i = 0; i < overlay.size(); i++) {
             OverlayItem item = overlay.getItem(i);
             projection.toPixels(item.getPoint(), out);
-            Log.d(TAG, "i = " + item.getTitle() + " " + out.toString());
             if (rect.contains(out.x, out.y) && !newFocus.equals(item)) {
                 items.add(item);
             }
         }
 
-        for (OverlayItem item : items) {
-
-            Log.d(TAG, item.getTitle());
-        }
-
     }
+    
+    
 
 }

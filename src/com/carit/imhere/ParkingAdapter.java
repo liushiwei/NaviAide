@@ -31,7 +31,7 @@ public class ParkingAdapter extends BaseAdapter {
     public int getCount() {
         // TODO Auto-generated method stub
         if(mResult!=null)
-        return mResult.getResults().length;
+        return mResult.getResults().length>=20?20:mResult.getResults().length;
         else
             return 0;
     }
@@ -59,7 +59,7 @@ public class ParkingAdapter extends BaseAdapter {
         } else {
             wrapper = (ViewWrapper) row.getTag();
         }
-        wrapper.getIcon().setImageResource(R.drawable.pin);
+        wrapper.getIcon().setImageResource(MapMode.mIcons[position]);
         wrapper.getMarkName().setText(mResult.getResults()[position].getName());
         wrapper.getMarkPlace().setText(mResult.getResults()[position].getVicinity());
         return row;

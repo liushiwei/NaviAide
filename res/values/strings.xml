@@ -9,9 +9,13 @@
     <string name="gas_station">加油站 </string>
     <string name="bank">银行</string>
     <string name="sport">体育馆 </string>
-    <string name="cafe">咖啡馆</string>
+    <string name="hotel">酒店住宿</string>
+    <string name="cafe">休闲娱乐</string>
+    <string name="medical">医疗</string>
+    <string name="traffic">公共交通</string>
     <string name="food">餐厅</string>
     <string name="car_repair">汽修店 </string>
+    <string name="shopping">购物</string>
     <string name="car_dealer">4S店 </string>
     <string name="car_route">行车路线 </string>
     <string name="start_time">开始时间</string>
@@ -41,4 +45,6 @@
     <string name="download_today">同步今天</string>
     <string name="download_all">同步全部</string>
     <string name="wrong_time">请正确设置时间</string>
+    <string name="label">兴趣点</string>
+    <string name="change">切换</string>
 </resources>

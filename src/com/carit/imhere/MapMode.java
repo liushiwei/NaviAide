@@ -88,6 +88,14 @@ public class MapMode extends MapActivity implements OnClickListener, ServiceCall
     public static final int CAR_DEALER = 0x10;
 
     public static final int CAR_ROUTE = 0x11;
+    
+    public static final int LODGING = 0x12;
+    
+    public static final int SHOPPING = 0x13;
+    
+    public static final int MEDICAL = 0x14;
+    
+    public static final int TRAFFIC = 0x15;
 
     public static final int HTTP_HTREAD_START = 0x101;
 
@@ -147,8 +155,6 @@ public class MapMode extends MapActivity implements OnClickListener, ServiceCall
 
     private boolean mIsPause;
 
-    private LongPressOverlay mLongPressOverlay;
-
     private MyLocationOverlay mMylocationOverlay;
     
     private RailOverlay mRailoverlay;
@@ -160,6 +166,17 @@ public class MapMode extends MapActivity implements OnClickListener, ServiceCall
     private int [] mRangeArray=new int[]{1000,2000,3000,5000};
    
     private int mCurrentRange =0;
+    
+    public static int [] mIcons = new int[]{R.drawable.icon_1,R.drawable.icon_2,
+            R.drawable.icon_3,R.drawable.icon_4,
+            R.drawable.icon_5,R.drawable.icon_6,
+            R.drawable.icon_7,R.drawable.icon_8,
+            R.drawable.icon_9,R.drawable.icon_10,
+            R.drawable.icon_11,R.drawable.icon_12,
+            R.drawable.icon_13,R.drawable.icon_14,
+            R.drawable.icon_15,R.drawable.icon_16,
+            R.drawable.icon_17,R.drawable.icon_18,
+            R.drawable.icon_19,R.drawable.icon_20};
     
     private Handler mHandler = new Handler() {
 
@@ -449,8 +466,8 @@ public class MapMode extends MapActivity implements OnClickListener, ServiceCall
         // 设置显示/隐藏气泡的监听器
         // mOverlay.setOnFocusChangeListener(onFocusChangeListener);
         mPassPinDrawable = getResources().getDrawable(R.drawable.pin_purple);
-        mLongPressOverlay = new LongPressOverlay(this, mMapView, mMapController, mPassPinDrawable);
-        list.add(mLongPressOverlay);
+        //mLongPressOverlay = new LongPressOverlay(this, mMapView, mMapController, mPassPinDrawable);
+        //list.add(mLongPressOverlay);
         findViewById(R.id.ImageButtonMyloc);
     }
     /**
@@ -476,22 +493,31 @@ public class MapMode extends MapActivity implements OnClickListener, ServiceCall
                 mtypes = "gas_station";
                 break;
             case FOOD:
-                mtypes = "food";
+                mtypes = "food|bakery|restaurant";
                 break;
             case BANK:
-                mtypes = "bank";
+                mtypes = "bank|atm|finance";
                 break;
             case CAR_REPAIR:
                 mtypes = "car_repair";
                 break;
             case CAR_DEALER:
-                mtypes = "car_dealer";
+                mtypes = "car_dealer|car_repair|car_wash";
                 break;
             case CAFE:
-                mtypes = "cafe";
+                mtypes = "cafe|amusement_park|aquarium|bar|movie_theater|zoo";
                 break;
-            case SPORT:
-                mtypes = "sport";
+            case LODGING:
+                mtypes = "lodging";
+                break;
+            case SHOPPING:
+                mtypes = "clothing_store|convenience_store|department_storeshopping_mall|store";
+                break;
+            case MEDICAL:
+                mtypes = "dentist|pharmacy|hospital|veterinary_care";
+                break;
+            case TRAFFIC:
+                mtypes = "train_station|subway_station|taxi_stand|airport";
                 break;
             case CAR_ROUTE:
                 findViewById(R.id.trackControl).setVisibility(View.VISIBLE);
@@ -505,6 +531,12 @@ public class MapMode extends MapActivity implements OnClickListener, ServiceCall
                 queryPoint(intent.getLongExtra("start_time", 0), intent.getLongExtra("end_time", 0));
                 break;
 
+        }
+        try {
+            mtypes = URLEncoder.encode(mtypes, "utf-8");
+        } catch (UnsupportedEncodingException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
         }
         if(CAR_ROUTE!=mViewType){
             init();
@@ -550,7 +582,7 @@ public class MapMode extends MapActivity implements OnClickListener, ServiceCall
                     else
                         mPoints = new ArrayList<GeoPoint>();
                     mOverlay.cleanOverlayItem();
-                    for (Place place : mPlaces.getResults()) {
+                   /* for (Place place : mPlaces.getResults()) {
                         GeoPoint point = new GeoPoint((int) (place.getGeometry().getLocation()
                                 .getLat() * 1000000), (int) (place.getGeometry().getLocation()
                                 .getLng() * 1000000));
@@ -559,6 +591,21 @@ public class MapMode extends MapActivity implements OnClickListener, ServiceCall
                                 place.getVicinity());
                         mOverlay.addOverlay(overlayItem);
 
+                    }*/
+                    Place[] places = mPlaces.getResults();
+                    for(int i=0;i<places.length&&i<20;i++){
+                        GeoPoint point = new GeoPoint((int) (places[i].getGeometry().getLocation()
+                                .getLat() * 1000000), (int) (places[i].getGeometry().getLocation()
+                                .getLng() * 1000000));
+                        mPoints.add(point);
+                        OverlayItem overlayItem = new OverlayItem(point, places[i].getName(),
+                                places[i].getVicinity());
+                        Drawable pinDrawable = getResources().getDrawable(mIcons[i]);
+                        pinDrawable.setBounds(0 - pinDrawable.getIntrinsicWidth() / 2,
+                                0 - pinDrawable.getIntrinsicHeight(),
+                                pinDrawable.getIntrinsicWidth() / 2, 0);
+                        overlayItem.setMarker(pinDrawable);
+                        mOverlay.addOverlay(overlayItem);
                     }
                     Log.e("MapMode", mPlaces.getStatus());
                     if (!mMapView.getOverlays().contains(mOverlay))
@@ -732,7 +779,7 @@ public class MapMode extends MapActivity implements OnClickListener, ServiceCall
                     // MockProvider.generateGpsFile(points);
                     if (mPathOverlay == null) {
 
-                        mStartPinDrawable = getResources().getDrawable(R.drawable.icon_nav_start);
+                        mStartPinDrawable = getResources().getDrawable(R.drawable.ic_location_pin_selected_rail);
                         mStartPinDrawable.setBounds(0 - mStartPinDrawable.getIntrinsicWidth() / 2,
                                 0 - mStartPinDrawable.getIntrinsicHeight(),
                                 mStartPinDrawable.getIntrinsicWidth() / 2, 0);
