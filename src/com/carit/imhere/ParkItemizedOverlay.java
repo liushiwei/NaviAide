@@ -69,6 +69,14 @@ public class ParkItemizedOverlay extends ItemizedOverlay implements OnFocusChang
         mMapView = mapView;
         mPopView = popView;
         mMapCtrl = mapCtrl;
+        mPopView.findViewById(R.id.poi1).findViewById(R.id.ImageButtonRight).setOnClickListener(mContext);
+        mPopView.findViewById(R.id.poi2).findViewById(R.id.ImageButtonRight).setOnClickListener(mContext);
+        mPopView.findViewById(R.id.poi3).findViewById(R.id.ImageButtonRight).setOnClickListener(mContext);
+        mPopView.findViewById(R.id.poi4).findViewById(R.id.ImageButtonRight).setOnClickListener(mContext);
+        mPopView.findViewById(R.id.poi1).findViewById(R.id.ImageButtonLeft).setOnClickListener(mContext);
+        mPopView.findViewById(R.id.poi2).findViewById(R.id.ImageButtonLeft).setOnClickListener(mContext);
+        mPopView.findViewById(R.id.poi3).findViewById(R.id.ImageButtonLeft).setOnClickListener(mContext);
+        mPopView.findViewById(R.id.poi4).findViewById(R.id.ImageButtonLeft).setOnClickListener(mContext);
 
     }
 
@@ -96,20 +104,7 @@ public class ParkItemizedOverlay extends ItemizedOverlay implements OnFocusChang
         populate();
     }
 
-    @Override
-    public boolean onTap(GeoPoint p, MapView mapView) {
-        return super.onTap(p, mapView);
-    }
 
-    @Override
-    protected boolean onTap(int index) {
-        return super.onTap(index);
-    }
-
-    @Override
-    public void draw(Canvas canvas, MapView mapView, boolean shadow) {
-        super.draw(canvas, mapView, shadow);
-    }
 
     public void onClick(View v) {
         // TODO Auto-generated method stub
@@ -134,10 +129,12 @@ public class ParkItemizedOverlay extends ItemizedOverlay implements OnFocusChang
             mPopView.findViewById(R.id.poi2).setVisibility(View.GONE);
             mPopView.findViewById(R.id.poi3).setVisibility(View.GONE);
             mPopView.findViewById(R.id.poi4).setVisibility(View.GONE);
+            
             if (list.size() > 1) {
                 for (int i = 0; i < list.size() && i < 4; i++) {
                     View tmp = mPopView.findViewById(mPopItem[i]);
                     tmp.findViewById(R.id.ImageButtonRight).setTag(list.get(i).getPoint());
+                    tmp.findViewById(R.id.ImageButtonLeft).setTag(list.get(i));
                     tmp.setVisibility(View.VISIBLE);
                     TextView title_TextView = (TextView) tmp.findViewById(R.id.ImageButton01);
                     title_TextView.setText(list.get(i).getTitle());
@@ -153,6 +150,7 @@ public class ParkItemizedOverlay extends ItemizedOverlay implements OnFocusChang
             } else {
                 mPopView.findViewById(R.id.poi1).setVisibility(View.VISIBLE);
                 mPopView.findViewById(R.id.poi1).findViewById(R.id.ImageButtonRight).setTag(point);
+                mPopView.findViewById(R.id.poi1).findViewById(R.id.ImageButtonLeft).setTag(newFocus);
                 TextView title_TextView = (TextView) mPopView.findViewById(R.id.ImageButton01);
                 title_TextView.setText(newFocus.getTitle());
                 TextView desc_TextView = (TextView) mPopView.findViewById(R.id.TextView02);

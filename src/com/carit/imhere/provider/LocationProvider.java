@@ -105,7 +105,7 @@ public class LocationProvider extends ContentProvider{
 
         SQLiteDatabase db = mOpenHelper.getWritableDatabase();
         try{
-        long rowId = db.insert(LOCATION_TABLE, LocationTable._ID, value);
+        long rowId = db.insert(LOCATION_TABLE, LocationTable.TIME, value);
         if (rowId > 0) {
             Uri noteUri = ContentUris.withAppendedId(LocationTable.CONTENT_URI, rowId);
             getContext().getContentResolver().notifyChange(noteUri, null);
@@ -158,8 +158,8 @@ public class LocationProvider extends ContentProvider{
         public void onCreate(SQLiteDatabase db) {
             Log.e(TAG, "Database Create!");
             db.execSQL("CREATE TABLE location_table ("
-                    +LocationTable._ID+" INTEGER primary key,"
-                    +"time INTEGER,"
+                    +LocationTable._ID+" INTEGER  NOT NULL PRIMARY KEY AUTOINCREMENT,"
+                    +"time INTEGER NOT NULL,"
                     +"provider TEXT,"
                     +"lat TEXT,"
                     +"lng TEXT," 

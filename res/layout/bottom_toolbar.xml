@@ -31,8 +31,9 @@
                 android:id="@+id/label"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:textColor="@android:color/white"
+                android:textColor="#a0a0a0"
                 android:text="@string/label"
+                android:autoLink="web"
                 android:textAppearance="?android:attr/textAppearanceLarge" />
             
         </LinearLayout>

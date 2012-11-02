@@ -226,6 +226,12 @@ public class PathOverlay extends ItemizedOverlay implements OnFocusChangeListene
         this.mOverlays = overlays;
         populate();
     }
+    
+    public void cleanOverlayItem() {
+        points.clear();
+        mOverlays.clear();
+        populate();
+    }
 
     @Override
     public void onFocusChanged(ItemizedOverlay overlay, OverlayItem newFocus) {

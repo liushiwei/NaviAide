@@ -88,30 +88,36 @@ public class MapMode extends MapActivity implements OnClickListener, ServiceCall
     public static final int CAR_DEALER = 0x10;
 
     public static final int CAR_ROUTE = 0x11;
-    
+
     public static final int LODGING = 0x12;
-    
+
     public static final int SHOPPING = 0x13;
-    
+
     public static final int MEDICAL = 0x14;
-    
+
     public static final int TRAFFIC = 0x15;
 
     public static final int HTTP_HTREAD_START = 0x101;
 
-    public static final int HTTP_HTREAD_COMPLETE = 0x102;
+    public static final int HTTP_HTREAD_FLASHLIST = 0x102;
+    
+    public static final int HTTP_HTREAD_COMPLETED = 0x108;
+    
 
     public static final int NOPOINTS = 0x103;
 
     public static final int NETWORKERROR = 0x104;
-    
+
     public static final int NOTRACK = 0x105;
-    
+
     public static final int NOTGETLOCATION = 0x106;
 
     public static final int GETLOCATION = 0x107;
     
+
     public static final int GET_PATH = 0x201;
+    
+    public static final int GET_PATH_COMPLETED = 0x202;
 
     private int mRadius = 1000;
 
@@ -128,7 +134,8 @@ public class MapMode extends MapActivity implements OnClickListener, ServiceCall
     private String mtypes;
 
     private int mViewType;
-    //private SMS_Receiver mSMSRec;
+
+    // private SMS_Receiver mSMSRec;
 
     /**
      * 弹出的气泡View
@@ -156,28 +163,31 @@ public class MapMode extends MapActivity implements OnClickListener, ServiceCall
     private boolean mIsPause;
 
     private MyLocationOverlay mMylocationOverlay;
-    
+
     private RailOverlay mRailoverlay;
-    
+
     protected NaviAideService mMyService;
 
     private ProgressDialog mProgDialog;
 
-    private int [] mRangeArray=new int[]{1000,2000,3000,5000};
-   
-    private int mCurrentRange =0;
-    
-    public static int [] mIcons = new int[]{R.drawable.icon_1,R.drawable.icon_2,
-            R.drawable.icon_3,R.drawable.icon_4,
-            R.drawable.icon_5,R.drawable.icon_6,
-            R.drawable.icon_7,R.drawable.icon_8,
-            R.drawable.icon_9,R.drawable.icon_10,
-            R.drawable.icon_11,R.drawable.icon_12,
-            R.drawable.icon_13,R.drawable.icon_14,
-            R.drawable.icon_15,R.drawable.icon_16,
-            R.drawable.icon_17,R.drawable.icon_18,
-            R.drawable.icon_19,R.drawable.icon_20};
-    
+    private boolean isSearchMyLocation;
+
+    private String mCurrentLocation;
+
+    private int[] mRangeArray = new int[] {
+            1000, 2000, 3000, 5000
+    };
+
+    private int mCurrentRange = 0;
+
+    public static int[] mIcons = new int[] {
+            R.drawable.icon_1, R.drawable.icon_2, R.drawable.icon_3, R.drawable.icon_4,
+            R.drawable.icon_5, R.drawable.icon_6, R.drawable.icon_7, R.drawable.icon_8,
+            R.drawable.icon_9, R.drawable.icon_10, R.drawable.icon_11, R.drawable.icon_12,
+            R.drawable.icon_13, R.drawable.icon_14, R.drawable.icon_15, R.drawable.icon_16,
+            R.drawable.icon_17, R.drawable.icon_18, R.drawable.icon_19, R.drawable.icon_20
+    };
+
     private Handler mHandler = new Handler() {
 
         @Override
@@ -188,25 +198,81 @@ public class MapMode extends MapActivity implements OnClickListener, ServiceCall
                     view = findViewById(R.id.progress_loc);
                     view.setVisibility(View.VISIBLE);
                     break;
-                case HTTP_HTREAD_COMPLETE:
+                case HTTP_HTREAD_COMPLETED:
+                    if (mPlaces.getResults() != null) {
+                        if (mPoints != null)
+                            mPoints.clear();
+                        else
+                            mPoints = new ArrayList<GeoPoint>();
+                        mOverlay.cleanOverlayItem();
+                        /*
+                         * for (Place place : mPlaces.getResults()) { GeoPoint point
+                         * = new GeoPoint((int) (place.getGeometry().getLocation()
+                         * .getLat() * 1000000), (int)
+                         * (place.getGeometry().getLocation() .getLng() * 1000000));
+                         * mPoints.add(point); OverlayItem overlayItem = new
+                         * OverlayItem(point, place.getName(), place.getVicinity());
+                         * mOverlay.addOverlay(overlayItem); }
+                         */
+                        Place[] places = mPlaces.getResults();
+                        for (int i = 0; i < places.length && i < 20; i++) {
+                            GeoPoint point = new GeoPoint((int) (places[i].getGeometry().getLocation()
+                                    .getLat() * 1000000), (int) (places[i].getGeometry().getLocation()
+                                    .getLng() * 1000000));
+                            mPoints.add(point);
+                            OverlayItem overlayItem = new OverlayItem(point, places[i].getName(),
+                                    places[i].getVicinity());
+                            Drawable pinDrawable = getResources().getDrawable(mIcons[i]);
+                            pinDrawable.setBounds(0 - pinDrawable.getIntrinsicWidth() / 2,
+                                    0 - pinDrawable.getIntrinsicHeight(),
+                                    pinDrawable.getIntrinsicWidth() / 2, 0);
+                            overlayItem.setMarker(pinDrawable);
+                            mOverlay.addOverlay(overlayItem);
+                        }
+                        Log.e("MapMode", mPlaces.getStatus());
+                        if (!mMapView.getOverlays().contains(mOverlay))
+                            mMapView.getOverlays().add(mOverlay);
+                        //reset status
+                        if(mMapView.getOverlays().contains(mPathOverlay))
+                            mPathOverlay.cleanOverlayItem();
+                        if(mPopView!=null)
+                        mPopView.setVisibility(View.GONE);
+                        
+                        mMapView.postInvalidate();
+                        mHandler.obtainMessage(HTTP_HTREAD_FLASHLIST).sendToTarget();
+                    } else {
+                        mHandler.sendEmptyMessage(NOPOINTS);
+                    }
+
+                    break;
+                case HTTP_HTREAD_FLASHLIST:
                     view = findViewById(R.id.progress_loc);
                     view.setVisibility(View.GONE);
                     if (msg.arg1 != GET_PATH) {
                         ListView listView = (ListView) findViewById(R.id.placeSearchList);
-                        mAdapter = new ParkingAdapter(getBaseContext(), mPlaces, R.layout.place_list_item);
+                        mAdapter = new ParkingAdapter(getBaseContext(), mPlaces,
+                                R.layout.place_list_item);
                         listView.setAdapter(mAdapter);
                         listView.setOnItemClickListener(new OnItemClickListener() {
 
-                            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                            public void onItemClick(AdapterView<?> parent, View view, int position,
+                                    long id) {
                                 // TODO Auto-generated method stub
                                 mMapController.animateTo(mPoints.get(position));
 
-                                TextView title_TextView = (TextView) mPopView.findViewById(R.id.ImageButton01);
+                                TextView title_TextView = (TextView) mPopView
+                                        .findViewById(R.id.ImageButton01);
                                 title_TextView.setText(mPlaces.getResults()[position].getName());
-                                TextView desc_TextView = (TextView) mPopView.findViewById(R.id.TextView02);
+                                TextView desc_TextView = (TextView) mPopView
+                                        .findViewById(R.id.TextView02);
                                 desc_TextView.setText(mPlaces.getResults()[position].getVicinity());
-                                mPopView.findViewById(R.id.poi1).findViewById(R.id.ImageButtonRight).setTag(mPoints.get(position));
-                                MapView.LayoutParams params = (MapView.LayoutParams) mPopView.getLayoutParams();
+                                mPopView.findViewById(R.id.poi1)
+                                        .findViewById(R.id.ImageButtonRight)
+                                        .setTag(mPoints.get(position));
+                                mPopView.findViewById(R.id.poi1).findViewById(R.id.ImageButtonLeft)
+                                        .setTag(mOverlay.getItem(position));
+                                MapView.LayoutParams params = (MapView.LayoutParams) mPopView
+                                        .getLayoutParams();
                                 params.x = mPinDrawable.getBounds().centerX();// Y轴偏移
                                 params.y = -mPinDrawable.getBounds().height();// Y轴偏移
                                 params.point = mPoints.get(position);
@@ -222,14 +288,15 @@ public class MapMode extends MapActivity implements OnClickListener, ServiceCall
                         findViewById(R.id.show).setOnClickListener(MapMode.this);
                         findViewById(R.id.hide).setOnClickListener(MapMode.this);
                         findViewById(R.id.change_range).setOnClickListener(MapMode.this);
-                        String text = String.format(getString(R.string.search_range), mRangeArray[mCurrentRange]/1000);
-                        ((TextView)findViewById(R.id.search_range)).setText(text);
+                        String text = String.format(getString(R.string.search_range),
+                                mRangeArray[mCurrentRange] / 1000);
+                        ((TextView) findViewById(R.id.search_range)).setText(text);
                         View list = findViewById(R.id.placeSearchResult);
                         list.setVisibility(View.VISIBLE);
                         mAdapter.setResult(mPlaces);
                         mAdapter.notifyDataSetChanged();
                     }
-                    Log.e("MapMode", "HTTP_HTREAD_COMPLETE");
+                    Log.e("MapMode", "HTTP_HTREAD_FLASHLIST");
                     break;
 
                 case NOPOINTS:
@@ -245,20 +312,92 @@ public class MapMode extends MapActivity implements OnClickListener, ServiceCall
                     Toast.makeText(getBaseContext(), R.string.no_track, Toast.LENGTH_LONG).show();
                     break;
                 case NOTGETLOCATION:
-                    Toast.makeText(getBaseContext(), R.string.not_get_location, Toast.LENGTH_LONG).show();
+                    Toast.makeText(getBaseContext(), R.string.not_get_location, Toast.LENGTH_LONG)
+                            .show();
                     break;
                 case GETLOCATION:
                     mProgDialog.dismiss();
+                    break;
+                case GET_PATH_COMPLETED:
+                    if (mDirections != null && mDirections.getRoutes() != null) {
+                        
+                        List<GeoPoint> points = decodePoly(mDirections.getRoutes()[0]
+                                .getOverview_polyline().getPoints());
+                        points.add(
+                                0,
+                                new GeoPoint((int) (mOrigin.getLatitude() * 1E6), (int) (mOrigin
+                                        .getLongitude() * 1E6)));
+                        points.add(mDestination);
+                        // MockProvider.generateGpsFile(points);
+                        if (mPathOverlay == null) {
+
+                            mStartPinDrawable = getResources().getDrawable(R.drawable.icon_nav_start);
+                            mStartPinDrawable.setBounds(0 - mStartPinDrawable.getIntrinsicWidth() / 2,
+                                    0 - mStartPinDrawable.getIntrinsicHeight(),
+                                    mStartPinDrawable.getIntrinsicWidth() / 2, 0);
+                            mPathOverlay = new PathOverlay(points, mMapView, mPopNoBtnView,
+                                    mMapController, mPathPinDrawable);
+                            mPathOverlay.getOverlays().clear();
+                            OverlayItem overlayItem = new OverlayItem(points.get(0),
+                                    getString(R.string.full)
+                                            + mDirections.getRoutes()[0].getLegs()[0].getDistance()
+                                                    .getText(), getString(R.string.take)
+                                            + mDirections.getRoutes()[0].getLegs()[0].getDuration()
+                                                    .getText());
+                            overlayItem.setMarker(mStartPinDrawable);
+                            mPathOverlay.addOverlay(overlayItem);
+                            // OverlayItem overlayItem=null;
+                            for (Step step : mDirections.getRoutes()[0].getLegs()[0].getSteps()) {
+                                overlayItem = new OverlayItem(new GeoPoint((int) (step
+                                        .getStart_location().getLat() * 1E6), (int) (step
+                                        .getStart_location().getLng() * 1E6)),
+                                        step.getHtml_instructions(), step.getDistance().getText() + "-"
+                                                + step.getDuration().getText());
+                                mPathOverlay.addOverlay(overlayItem);
+                            }
+
+                            mMapView.getOverlays().add(mPathOverlay);
+                            mMapView.postInvalidate();
+                        } else {
+
+                            mPathOverlay.setPoints(decodePoly(mDirections.getRoutes()[0]
+                                    .getOverview_polyline().getPoints()));
+                            mPathOverlay.getPoints().add(
+                                    0,
+                                    new GeoPoint((int) (mOrigin.getLatitude() * 1E6), (int) (mOrigin
+                                            .getLongitude() * 1E6)));
+                            mPathOverlay.getPoints().add(mDestination);
+                            mPathOverlay.getOverlays().clear();
+                            OverlayItem overlayItem = new OverlayItem(points.get(0),
+                                    getString(R.string.full)
+                                            + mDirections.getRoutes()[0].getLegs()[0].getDistance()
+                                                    .getText(), getString(R.string.take)
+                                            + mDirections.getRoutes()[0].getLegs()[0].getDuration()
+                                                    .getText());
+                            overlayItem.setMarker(mStartPinDrawable);
+                            mPathOverlay.addOverlay(overlayItem);
+                            for (Step step : mDirections.getRoutes()[0].getLegs()[0].getSteps()) {
+                                overlayItem = new OverlayItem(new GeoPoint((int) (step
+                                        .getStart_location().getLat() * 1E6), (int) (step
+                                        .getStart_location().getLng() * 1E6)),
+                                        step.getHtml_instructions(), step.getDistance().getText() + "-"
+                                                + step.getDuration().getText());
+                                mPathOverlay.addOverlay(overlayItem);
+                            }
+                        }
+                        mMapController.animateTo(points.get(0));
+
+                        Log.e("MapMode", mDirections.getStatus());
+                    }
+
+                    mHandler.obtainMessage(HTTP_HTREAD_FLASHLIST, GET_PATH, 0).sendToTarget();
+
                     break;
             }
             super.handleMessage(msg);
         }
 
     };
-
-    
-
-
 
     /** Called when the activity is first created. */
     @Override
@@ -279,25 +418,25 @@ public class MapMode extends MapActivity implements OnClickListener, ServiceCall
         // 设置地图支持缩放
         mMapView.setBuiltInZoomControls(true);
 
-//        mOrigin = new Location(LocationManager.NETWORK_PROVIDER);
-//        mOrigin.setLatitude(22.541949);
-//        mOrigin.setLongitude(113.989629);
-        //mGeoPoint = new GeoPoint((int) (22.541949 * 1000000), (int) (113.989629 * 1000000));
+        // mOrigin = new Location(LocationManager.NETWORK_PROVIDER);
+        // mOrigin.setLatitude(22.541949);
+        // mOrigin.setLongitude(113.989629);
+        // mGeoPoint = new GeoPoint((int) (22.541949 * 1000000), (int)
+        // (113.989629 * 1000000));
 
         // 定位到深圳
 
-        //mMapController.animateTo(mGeoPoint);
+        // mMapController.animateTo(mGeoPoint);
         // 设置倍数(1-21)
         mMapController.setZoom(18);
 
-       
-        //Log.e("MapMode", "network is open" + isOpen());
+        // Log.e("MapMode", "network is open" + isOpen());
         processIntent(getIntent());
 
-//        mSMSRec = new SMS_Receiver();
-//        IntentFilter filter = new IntentFilter();
-//        filter.addAction("android.provider.Telephony.SMS_RECEIVED");
-//        this.registerReceiver(mSMSRec, filter);
+        // mSMSRec = new SMS_Receiver();
+        // IntentFilter filter = new IntentFilter();
+        // filter.addAction("android.provider.Telephony.SMS_RECEIVED");
+        // this.registerReceiver(mSMSRec, filter);
 
     }
 
@@ -335,28 +474,28 @@ public class MapMode extends MapActivity implements OnClickListener, ServiceCall
 
     @Override
     protected void onPause() {
-        if(CAR_ROUTE!=mViewType){
-        mMylocationOverlay.disableMyLocation();
-        mMylocationOverlay.disableCompass();
+        if (CAR_ROUTE != mViewType) {
+            mMylocationOverlay.disableMyLocation();
+            mMylocationOverlay.disableCompass();
         }
         super.onPause();
     }
 
     @Override
     protected void onResume() {
-        if(CAR_ROUTE!=mViewType){
-        mMylocationOverlay.enableCompass();
-        mMylocationOverlay.enableMyLocation();
+        if (CAR_ROUTE != mViewType) {
+            mMylocationOverlay.enableCompass();
+            mMylocationOverlay.enableMyLocation();
         }
-//         Location location = new Location(MockProvider.MODK_PROVIDER);
-//         location.setLatitude(22.538928);
-//         location.setLongitude(113.994162);
-//         location.setTime(System.currentTimeMillis());
-//         location.setAltitude(100);
-//
-//         MockProvider.getInstance()
-//         .init((LocationManager) getSystemService(Context.LOCATION_SERVICE))
-//         .setLocation(location);
+        // Location location = new Location(MockProvider.MODK_PROVIDER);
+        // location.setLatitude(22.538928);
+        // location.setLongitude(113.994162);
+        // location.setTime(System.currentTimeMillis());
+        // location.setAltitude(100);
+        //
+        // MockProvider.getInstance()
+        // .init((LocationManager) getSystemService(Context.LOCATION_SERVICE))
+        // .setLocation(location);
         // MockProvider.getInstance().init((LocationManager)
         Intent i = new Intent();
         i.setClass(this, NaviAideService.class);
@@ -365,35 +504,20 @@ public class MapMode extends MapActivity implements OnClickListener, ServiceCall
         super.onResume();
     }
 
-    
-    private void init(){
-        // 添加Overlay，用于显示标注信息
-//        mMapView.setOnTouchListener(new OnTouchListener() {
-//            
-//            @Override
-//            public boolean onTouch(View v, MotionEvent event) {
-//                Log.e(TAG, "x="+event.getX()+",y="+event.getY()+" code="+event.getAction());
-//                if(MotionEvent.ACTION_DOWN==event.getAction()){
-//                    mRailoverlay.setLeftTop(new Point((int)event.getX(),(int)event.getY()));
-//                    mRailoverlay.setRightBelow(new Point((int)event.getX(),(int)event.getY()));
-//                }else{
-//                    mRailoverlay.setRightBelow(new Point((int)event.getX(),(int)event.getY()));
-//                }
-//                mMapView.invalidate();
-//                return true;
-//            }
-//        });
-        mProgDialog = ProgressDialog.show(MapMode.this, null, getString(R.string.getting_location), true, false);
+    private void init() {
+
+        mProgDialog = ProgressDialog.show(MapMode.this, null, getString(R.string.getting_location),
+                true, false);
         mProgDialog.setOnKeyListener(new OnKeyListener() {
-            
+
             @Override
             public boolean onKey(DialogInterface dialog, int keyCode, KeyEvent event) {
-                if(KeyEvent.KEYCODE_BACK==keyCode)
+                if (KeyEvent.KEYCODE_BACK == keyCode)
                     MapMode.this.finish();
                 return false;
             }
         });
-        mMylocationOverlay = new MyLocationOverlay(getBaseContext(), mMapView);
+        mMylocationOverlay = new MyLocationOverlay(this, mMapView);
         mMylocationOverlay.runOnFirstFix(new Thread() {
 
             @Override
@@ -401,13 +525,15 @@ public class MapMode extends MapActivity implements OnClickListener, ServiceCall
                 Log.e(TAG, "runOnFirstFix lat="
                         + mMylocationOverlay.getMyLocation().getLatitudeE6() + " lng="
                         + mMylocationOverlay.getMyLocation().getLongitudeE6());
-                mMapController.animateTo(mMylocationOverlay.getMyLocation());
-                if(mOrigin!=null){
-                    mOrigin.setLatitude(mMylocationOverlay.getMyLocation().getLatitudeE6()/1E6);
-                    mOrigin.setLongitude(mMylocationOverlay.getMyLocation().getLongitudeE6()/1E6);
-                }else{
-                    //mOrigin = 
-                    mOrigin = mMylocationOverlay.getLastFix();
+                if (isSearchMyLocation) {
+                    mMapController.animateTo(mMylocationOverlay.getMyLocation());
+                    if (mOrigin != null) {
+                        mOrigin.setLatitude(mMylocationOverlay.getMyLocation().getLatitudeE6() / 1E6);
+                        mOrigin.setLongitude(mMylocationOverlay.getMyLocation().getLongitudeE6() / 1E6);
+                    } else {
+                        // mOrigin =
+                        mOrigin = mMylocationOverlay.getLastFix();
+                    }
                 }
                 if (mtypes != null) {
                     mHandler.sendEmptyMessageDelayed(GETLOCATION, 500);
@@ -419,9 +545,9 @@ public class MapMode extends MapActivity implements OnClickListener, ServiceCall
         });
         List<Overlay> list = mMapView.getOverlays();
 
-        //电子栅栏
-//        mRailoverlay = new RailOverlay();
-//        list.add(mRailoverlay);
+        // 电子栅栏
+        // mRailoverlay = new RailOverlay();
+        // list.add(mRailoverlay);
         list.add(mMylocationOverlay);
 
         ToggleButton its = (ToggleButton) findViewById(R.id.ToggleButton_ITS);
@@ -437,11 +563,9 @@ public class MapMode extends MapActivity implements OnClickListener, ServiceCall
 
             }
         });
-        //findViewById(R.id.ImageButtonAR).setOnClickListener(this);
-        
-        findViewById(R.id.ImageButtonHotkey).setOnClickListener(this);
+        // findViewById(R.id.ImageButtonAR).setOnClickListener(this);
 
-        
+        findViewById(R.id.ImageButtonHotkey).setOnClickListener(this);
 
         // 初始化气泡,并设置为不可见
         mPopView = View.inflate(this, R.layout.popup, null);
@@ -455,6 +579,8 @@ public class MapMode extends MapActivity implements OnClickListener, ServiceCall
         mPopNoBtnView.setVisibility(View.GONE);
         ImageButton button = (ImageButton) mPopView.findViewById(R.id.ImageButtonRight);
         button.setOnClickListener(this);
+        button = (ImageButton) mPopView.findViewById(R.id.ImageButtonLeft);
+        button.setOnClickListener(this);
         mPinDrawable = this.getResources().getDrawable(R.drawable.pin);
         // 为maker定义位置和边界
         mPinDrawable.setBounds(0, 0, mPinDrawable.getIntrinsicWidth(),
@@ -465,11 +591,13 @@ public class MapMode extends MapActivity implements OnClickListener, ServiceCall
         mOverlay = new ParkItemizedOverlay(mPinDrawable, this, mMapView, mPopView, mMapController);
         // 设置显示/隐藏气泡的监听器
         // mOverlay.setOnFocusChangeListener(onFocusChangeListener);
-        mPassPinDrawable = getResources().getDrawable(R.drawable.pin_purple);
-        //mLongPressOverlay = new LongPressOverlay(this, mMapView, mMapController, mPassPinDrawable);
-        //list.add(mLongPressOverlay);
-        findViewById(R.id.ImageButtonMyloc);
+        
+        // mLongPressOverlay = new LongPressOverlay(this, mMapView,
+        // mMapController, mPassPinDrawable);
+        // list.add(mLongPressOverlay);
+        findViewById(R.id.ImageButtonMyloc).setOnClickListener(this);
     }
+
     /**
      * 发送请求，打开GPS
      */
@@ -485,6 +613,29 @@ public class MapMode extends MapActivity implements OnClickListener, ServiceCall
     private void processIntent(Intent intent) {
         mtypes = null;
         mViewType = intent.getIntExtra("hotkey", -1);
+        mCurrentLocation = intent.getStringExtra("search_location");
+        ((TextView) findViewById(R.id.current_location)).setText(mCurrentLocation);
+        if (mCurrentLocation != null) {
+            mOrigin = new Location("network");
+            mOrigin.setLatitude(intent.getIntExtra("lat", 0) / 1E6);
+            mOrigin.setLongitude(intent.getIntExtra("lng", 0) / 1E6);
+            GeoPoint point = new GeoPoint(intent.getIntExtra("lat", 0),
+                    intent.getIntExtra("lng", 0));
+            mMapController.animateTo(point);
+            isSearchMyLocation = false;
+            if (!mCurrentLocation.equals(getString(R.string.myself_location))) {
+                mPassPinDrawable = getResources().getDrawable(R.drawable.pin_purple);
+                SearchLocationOverlay overlay = new SearchLocationOverlay(this, mMapView,
+                        mMapController, mPassPinDrawable);
+                mMapView.getOverlays().add(overlay);
+
+                overlay.addOverlayItem(new OverlayItem(point, mCurrentLocation, ""));
+            }
+        } else {
+            ((TextView) findViewById(R.id.current_location))
+                    .setText(getString(R.string.myself_location));
+            isSearchMyLocation = true;
+        }
         switch (mViewType) {
             case PARKING:
                 mtypes = "parking";
@@ -538,26 +689,26 @@ public class MapMode extends MapActivity implements OnClickListener, ServiceCall
             // TODO Auto-generated catch block
             e.printStackTrace();
         }
-        if(CAR_ROUTE!=mViewType){
+        if (CAR_ROUTE != mViewType) {
             init();
         }
-        
+
     }
 
     private void queryPoi(String keyWord, String type) {
         String url = null;
-        if(mOrigin == null){
+        if (mOrigin == null) {
             mHandler.sendEmptyMessage(NOTGETLOCATION);
             return;
         }
         String origin = mOrigin.getLatitude() + "," + mOrigin.getLongitude();
         if (keyWord == null)
-            url = "https://maps.googleapis.com/maps/api/place/search/json?location="
-                    + origin + "&radius=" + mRangeArray[mCurrentRange] + "&types=" + type
+            url = "https://maps.googleapis.com/maps/api/place/search/json?location=" + origin
+                    + "&radius=" + mRangeArray[mCurrentRange] + "&types=" + type
                     + "&sensor=true&key=AIzaSyDbYqd7KvrZhqffpw4YfMsDreKgk9MuGJM&language=zh-CN";
         else
-            url = "https://maps.googleapis.com/maps/api/place/search/json?location="
-                    + origin + "&radius=" + mRangeArray[mCurrentRange] + "&types=" + type + "&name="
+            url = "https://maps.googleapis.com/maps/api/place/search/json?location=" + origin
+                    + "&radius=" + mRangeArray[mCurrentRange] + "&types=" + type + "&name="
                     + keyWord
                     + "&sensor=true&key=AIzaSyDbYqd7KvrZhqffpw4YfMsDreKgk9MuGJM&language=zh-CN";
         HttpThread thread = new HttpThread(url, new HttpThreadListener() {
@@ -576,47 +727,9 @@ public class MapMode extends MapActivity implements OnClickListener, ServiceCall
 
                 Gson gson = new Gson();
                 mPlaces = gson.fromJson(result, PlaceSearchResult.class);
-                if (mPlaces.getResults() != null) {
-                    if (mPoints != null)
-                        mPoints.clear();
-                    else
-                        mPoints = new ArrayList<GeoPoint>();
-                    mOverlay.cleanOverlayItem();
-                   /* for (Place place : mPlaces.getResults()) {
-                        GeoPoint point = new GeoPoint((int) (place.getGeometry().getLocation()
-                                .getLat() * 1000000), (int) (place.getGeometry().getLocation()
-                                .getLng() * 1000000));
-                        mPoints.add(point);
-                        OverlayItem overlayItem = new OverlayItem(point, place.getName(),
-                                place.getVicinity());
-                        mOverlay.addOverlay(overlayItem);
-
-                    }*/
-                    Place[] places = mPlaces.getResults();
-                    for(int i=0;i<places.length&&i<20;i++){
-                        GeoPoint point = new GeoPoint((int) (places[i].getGeometry().getLocation()
-                                .getLat() * 1000000), (int) (places[i].getGeometry().getLocation()
-                                .getLng() * 1000000));
-                        mPoints.add(point);
-                        OverlayItem overlayItem = new OverlayItem(point, places[i].getName(),
-                                places[i].getVicinity());
-                        Drawable pinDrawable = getResources().getDrawable(mIcons[i]);
-                        pinDrawable.setBounds(0 - pinDrawable.getIntrinsicWidth() / 2,
-                                0 - pinDrawable.getIntrinsicHeight(),
-                                pinDrawable.getIntrinsicWidth() / 2, 0);
-                        overlayItem.setMarker(pinDrawable);
-                        mOverlay.addOverlay(overlayItem);
-                    }
-                    Log.e("MapMode", mPlaces.getStatus());
-                    if (!mMapView.getOverlays().contains(mOverlay))
-                        mMapView.getOverlays().add(mOverlay);
-                    mHandler.obtainMessage(HTTP_HTREAD_COMPLETE).sendToTarget();
-                }else{
-                    mHandler.sendEmptyMessage(NOPOINTS);
-                }
-
+                mHandler.sendEmptyMessage(HTTP_HTREAD_COMPLETED);
             }
-        },false);
+        }, false);
         thread.start();
     }
 
@@ -624,8 +737,19 @@ public class MapMode extends MapActivity implements OnClickListener, ServiceCall
     public void onClick(View v) {
         // TODO Auto-generated method stub
 
-        if (v.getTag() != null) {
-            getPath((GeoPoint) v.getTag(), null);
+        if (v.getId() == R.id.ImageButtonRight || v.getId() == R.id.ImageButtonLeft) {
+            if (v.getTag() != null) {
+                if (v.getId() == R.id.ImageButtonRight)
+                    getPath((GeoPoint) v.getTag(), null);
+                else {
+                    Intent intent = new Intent(this, MainActivity.class);
+                    intent.putExtra("search_location", ((OverlayItem) v.getTag()).getTitle());
+                    intent.putExtra("lat", ((OverlayItem) v.getTag()).getPoint().getLatitudeE6());
+                    intent.putExtra("lng", ((OverlayItem) v.getTag()).getPoint().getLongitudeE6());
+                    startActivity(intent);
+                    finish();
+                }
+            }
         } else {
             switch (v.getId()) {
                 case R.id.hide:
@@ -662,10 +786,13 @@ public class MapMode extends MapActivity implements OnClickListener, ServiceCall
                     break;
                 case R.id.change_range:
                     Log.e(TAG, "change_range");
-                    mCurrentRange = ++mCurrentRange==mRangeArray.length?0:mCurrentRange; 
-                    
+                    mCurrentRange = ++mCurrentRange == mRangeArray.length ? 0 : mCurrentRange;
+
                     queryPoi(null, mtypes);
-                    
+
+                    break;
+                case R.id.ImageButtonMyloc:
+                    mMapController.animateTo(mMylocationOverlay.getMyLocation());
                     break;
             }
         }
@@ -706,7 +833,7 @@ public class MapMode extends MapActivity implements OnClickListener, ServiceCall
     }
 
     public void getPath(GeoPoint point, GeoPoint[] passPoint) {
-        if(mOrigin == null){
+        if (mOrigin == null) {
             mHandler.sendEmptyMessage(NOTGETLOCATION);
             return;
         }
@@ -744,101 +871,21 @@ public class MapMode extends MapActivity implements OnClickListener, ServiceCall
         HttpThread thread = new HttpThread(url, new HttpThreadListener() {
 
             public void start() {
-                mHandler.obtainMessage(HTTP_HTREAD_START).sendToTarget();
+                mHandler.sendEmptyMessage(HTTP_HTREAD_START);
 
             }
 
             public void netError(String error) {
-                mHandler.obtainMessage(NETWORKERROR).sendToTarget();
+                mHandler.sendEmptyMessage(NETWORKERROR);
 
             }
 
             public void complete(String result) {
-
                 Gson gson = new Gson();
                 mDirections = gson.fromJson(result, Directions.class);
-                if (mDirections != null && mDirections.getRoutes() != null) {
-                    /*
-                     * for (Step step :
-                     * directions.getRoutes()[0].getLegs()[0].getSteps()) {
-                     * GeoPoint point = new GeoPoint( (int)
-                     * (step.getStart_location().getLat() * 1000000), (int)
-                     * (step.getStart_location().getLng() * 1000000));
-                     * mPoints.add(point); point = new GeoPoint( (int)
-                     * (step.getEnd_location().getLat() * 1000000), (int) (step
-                     * .getEnd_location().getLng() * 1000000));
-                     * mPoints.add(point); }
-                     */
-                    List<GeoPoint> points = decodePoly(mDirections.getRoutes()[0]
-                            .getOverview_polyline().getPoints());
-                    points.add(
-                            0,
-                            new GeoPoint((int) (mOrigin.getLatitude() * 1E6), (int) (mOrigin
-                                    .getLongitude() * 1E6)));
-                    points.add(mDestination);
-                    // MockProvider.generateGpsFile(points);
-                    if (mPathOverlay == null) {
-
-                        mStartPinDrawable = getResources().getDrawable(R.drawable.ic_location_pin_selected_rail);
-                        mStartPinDrawable.setBounds(0 - mStartPinDrawable.getIntrinsicWidth() / 2,
-                                0 - mStartPinDrawable.getIntrinsicHeight(),
-                                mStartPinDrawable.getIntrinsicWidth() / 2, 0);
-                        mPathOverlay = new PathOverlay(points, mMapView, mPopNoBtnView,
-                                mMapController, mPathPinDrawable);
-                        mPathOverlay.getOverlays().clear();
-                        OverlayItem overlayItem = new OverlayItem(points.get(0),
-                                getString(R.string.full)
-                                        + mDirections.getRoutes()[0].getLegs()[0].getDistance()
-                                                .getText(), getString(R.string.take)
-                                        + mDirections.getRoutes()[0].getLegs()[0].getDuration()
-                                                .getText());
-                        overlayItem.setMarker(mStartPinDrawable);
-                        mPathOverlay.addOverlay(overlayItem);
-                        // OverlayItem overlayItem=null;
-                        for (Step step : mDirections.getRoutes()[0].getLegs()[0].getSteps()) {
-                            overlayItem = new OverlayItem(new GeoPoint((int) (step
-                                    .getStart_location().getLat() * 1E6), (int) (step
-                                    .getStart_location().getLng() * 1E6)),
-                                    step.getHtml_instructions(), step.getDistance().getText() + "-"
-                                            + step.getDuration().getText());
-                            mPathOverlay.addOverlay(overlayItem);
-                        }
-
-                        mMapView.getOverlays().add(mPathOverlay);
-                    } else {
-                        
-                        mPathOverlay.setPoints(decodePoly(mDirections.getRoutes()[0]
-                                .getOverview_polyline().getPoints()));
-                        mPathOverlay.getPoints().add(0,new GeoPoint((int) (mOrigin.getLatitude() * 1E6), (int) (mOrigin
-                                        .getLongitude() * 1E6)));
-                        mPathOverlay.getPoints().add(mDestination);
-                        mPathOverlay.getOverlays().clear();
-                        OverlayItem overlayItem = new OverlayItem(points.get(0),
-                                getString(R.string.full)
-                                        + mDirections.getRoutes()[0].getLegs()[0].getDistance()
-                                                .getText(), getString(R.string.take)
-                                        + mDirections.getRoutes()[0].getLegs()[0].getDuration()
-                                                .getText());
-                        overlayItem.setMarker(mStartPinDrawable);
-                        mPathOverlay.addOverlay(overlayItem);
-                        for (Step step : mDirections.getRoutes()[0].getLegs()[0].getSteps()) {
-                            overlayItem = new OverlayItem(new GeoPoint((int) (step
-                                    .getStart_location().getLat() * 1E6), (int) (step
-                                    .getStart_location().getLng() * 1E6)),
-                                    step.getHtml_instructions(), step.getDistance().getText() + "-"
-                                            + step.getDuration().getText());
-                            mPathOverlay.addOverlay(overlayItem);
-                        }
-                    }
-                    mMapController.animateTo(points.get(0));
-
-                    Log.e("MapMode", mDirections.getStatus());
-                }
-
-                mHandler.obtainMessage(HTTP_HTREAD_COMPLETE, GET_PATH, 0).sendToTarget();
-
+                mHandler.sendEmptyMessage(GET_PATH_COMPLETED);
             }
-        },false);
+        }, false);
         thread.start();
 
     }
@@ -916,46 +963,10 @@ public class MapMode extends MapActivity implements OnClickListener, ServiceCall
 
     };
 
-  /*  public class SMS_Receiver extends BroadcastReceiver {
-
-        @Override
-        public void onReceive(Context context, Intent intent) {
-            // #navi#|22534717,113987961|
-            Log.e("SMS_Receiver", "收到短信");
-            if (intent.getAction().equals("android.provider.Telephony.SMS_RECEIVED")) {
-                Object[] pdus = (Object[]) intent.getExtras().get("pdus");
-                // 不知道为什么明明只有一条消息，传过来的却是数组，也许是为了处理同时同分同秒同毫秒收到多条短信
-                // 但这个概率有点小
-                SmsMessage[] message = new SmsMessage[pdus.length];
-                StringBuilder sb = new StringBuilder();
-                Log.e("SMS_Receiver", "pdus长度" + pdus.length);
-                for (int i = 0; i < pdus.length; i++) {
-                    // 虽然是循环，其实pdus长度一般都是1
-                    message[i] = SmsMessage.createFromPdu((byte[]) pdus[i]);
-                    sb.append("接收到短信来自:\n");
-                    sb.append(message[i].getDisplayOriginatingAddress() + "\n");
-                    sb.append("内容:" + message[i].getDisplayMessageBody());
-                    String body = message[i].getDisplayMessageBody();
-                    if (body.contains("#navi#")) {
-                        String point = body.substring(body.indexOf("|") + 1,
-                                body.indexOf("|", body.indexOf("|") + 1));
-                        String[] tmp = point.split(",");
-                        OverlayItem overlayItem = new OverlayItem(new GeoPoint(
-                                Integer.valueOf(tmp[0]), Integer.valueOf(tmp[1])), "", "");
-                        mLongPressOverlay.addOverlayItem(overlayItem);
-                        this.abortBroadcast();
-                    }
-                }
-                Log.e("SMS_Receiver", sb.toString());
-            }
-        }
-
-    }
-*/
     @Override
     protected void onDestroy() {
         // mMyLocationManager.destoryLocationManager();
-        //unregisterReceiver(mSMSRec);
+        // unregisterReceiver(mSMSRec);
         unbindService(mServiceConnection);
         super.onDestroy();
     }
@@ -967,9 +978,12 @@ public class MapMode extends MapActivity implements OnClickListener, ServiceCall
             Log.e(TAG, "onServiceConnected");
             mMyService = ((NaviAideService.MyBinder) service).getService();
             mMyService.setCallBack(MapMode.this);
-            mOrigin = mMyService.getLastLocation();
-            if(mOrigin!=null)
-            mMapController.animateTo(new GeoPoint((int)(mOrigin.getLatitude()*1E6),(int)(mOrigin.getLongitude()*1E6)));
+            if (isSearchMyLocation) {
+                mOrigin = mMyService.getLastLocation();
+                if (mOrigin != null)
+                    mMapController.animateTo(new GeoPoint((int) (mOrigin.getLatitude() * 1E6),
+                            (int) (mOrigin.getLongitude() * 1E6)));
+            }
         }
 
         public void onServiceDisconnected(ComponentName name) {
@@ -980,22 +994,15 @@ public class MapMode extends MapActivity implements OnClickListener, ServiceCall
 
     @Override
     public void onLocationChange(Location location) {
-        if (location != null) {
+        if (location != null && isSearchMyLocation) {
 
-            // Log.i("SuperMap", "Location changed :provider = " +
-            // location.getProvider() + " Lat: "
-            // + location.getLatitude() + " Lng: " + location.getLongitude());
-//            mMapController.animateTo(new GeoPoint((int) (location.getLatitude() * 1000000),
-//                    (int) (location.getLongitude() * 1000000)));
             mOrigin = location;
-            // Toast.makeText(getBaseContext(), "provider = " +
-            // location.getProvider() + " Lat: "
-            // + location.getLatitude() + " Lng: " + location.getLongitude(),
-            // Toast.LENGTH_LONG).show();
         }
 
     }
-    
-    
+
+    public View getPopView() {
+        return mPopView;
+    }
 
 }

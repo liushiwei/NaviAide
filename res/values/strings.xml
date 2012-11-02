@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-    <string name="app_name">Navi Aide</string>
+    <string name="app_name">POI</string>
     <string name="menu_settings">Settings</string>
     <string name="full ">Full </string>
     <string name="take">Take </string>
@@ -45,6 +45,8 @@
     <string name="download_today">同步今天</string>
     <string name="download_all">同步全部</string>
     <string name="wrong_time">请正确设置时间</string>
-    <string name="label">兴趣点</string>
+    <string name="label">您正在查找 &lt;font color="#ffffff">%1$s &lt;/font>周边信息</string>
     <string name="change">切换</string>
+    <string name="myself_location">当前所在位置</string>
+    
 </resources>
