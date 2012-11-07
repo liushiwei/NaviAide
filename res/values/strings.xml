@@ -18,8 +18,8 @@
     <string name="shopping">购物</string>
     <string name="car_dealer">4S店 </string>
     <string name="car_route">行车路线 </string>
-    <string name="start_time">开始时间</string>
-    <string name="end_time">结束时间</string>
+    <string name="start_time">开始时间:</string>
+    <string name="end_time">结束时间:</string>
     <string name="search">查询</string>
     <string name="search_today">查询今天</string>
     <string name="clean">清除</string>
@@ -48,5 +48,14 @@
     <string name="label">您正在查找 &lt;font color="#ffffff">%1$s &lt;/font>周边信息</string>
     <string name="change">切换</string>
     <string name="myself_location">当前所在位置</string>
-    
+    <string name="route_logger">行车轨迹</string>
+    <string name="logging">正在记录行车轨迹</string>
+    <string name="uploading">正在上传&#8230;</string>
+    <string name="downloading">正在同步&#8230;</string>
+    <string name="upload_success">上传成功</string>
+    <string name="no_data_upload">没有要数据的上传</string>
+    <string name="upload_failed">上传失败</string>
+    <string name="download_success">同步成功</string>
+    <string name="download_failed">同步失败</string>
+    <string name="no_data_download">没有数据可以同步</string>
 </resources>

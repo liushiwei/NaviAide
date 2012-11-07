@@ -15,6 +15,14 @@
         <item name="android:textSize">18sp</item>
     </style>
     
+    <style name="Route_Button_Style">
+        <item name="android:layout_width">130dp</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:textColor">#ffffff</item>
+        <item name="android:background">@drawable/btn_2</item>
+        <item name="android:layout_marginBottom">20dp</item>
+    </style>
+    
     <style name="LocationProgressStyle" parent="@android:style/Widget.ProgressBar">
         <item name="android:maxWidth">20.0dip</item>
         <item name="android:maxHeight">20.0dip</item>

@@ -100,9 +100,8 @@ public class MapMode extends MapActivity implements OnClickListener, ServiceCall
     public static final int HTTP_HTREAD_START = 0x101;
 
     public static final int HTTP_HTREAD_FLASHLIST = 0x102;
-    
+
     public static final int HTTP_HTREAD_COMPLETED = 0x108;
-    
 
     public static final int NOPOINTS = 0x103;
 
@@ -113,10 +112,9 @@ public class MapMode extends MapActivity implements OnClickListener, ServiceCall
     public static final int NOTGETLOCATION = 0x106;
 
     public static final int GETLOCATION = 0x107;
-    
 
     public static final int GET_PATH = 0x201;
-    
+
     public static final int GET_PATH_COMPLETED = 0x202;
 
     private int mRadius = 1000;
@@ -206,19 +204,20 @@ public class MapMode extends MapActivity implements OnClickListener, ServiceCall
                             mPoints = new ArrayList<GeoPoint>();
                         mOverlay.cleanOverlayItem();
                         /*
-                         * for (Place place : mPlaces.getResults()) { GeoPoint point
-                         * = new GeoPoint((int) (place.getGeometry().getLocation()
-                         * .getLat() * 1000000), (int)
-                         * (place.getGeometry().getLocation() .getLng() * 1000000));
-                         * mPoints.add(point); OverlayItem overlayItem = new
-                         * OverlayItem(point, place.getName(), place.getVicinity());
+                         * for (Place place : mPlaces.getResults()) { GeoPoint
+                         * point = new GeoPoint((int)
+                         * (place.getGeometry().getLocation() .getLat() *
+                         * 1000000), (int) (place.getGeometry().getLocation()
+                         * .getLng() * 1000000)); mPoints.add(point);
+                         * OverlayItem overlayItem = new OverlayItem(point,
+                         * place.getName(), place.getVicinity());
                          * mOverlay.addOverlay(overlayItem); }
                          */
                         Place[] places = mPlaces.getResults();
                         for (int i = 0; i < places.length && i < 20; i++) {
-                            GeoPoint point = new GeoPoint((int) (places[i].getGeometry().getLocation()
-                                    .getLat() * 1000000), (int) (places[i].getGeometry().getLocation()
-                                    .getLng() * 1000000));
+                            GeoPoint point = new GeoPoint((int) (places[i].getGeometry()
+                                    .getLocation().getLat() * 1000000), (int) (places[i]
+                                    .getGeometry().getLocation().getLng() * 1000000));
                             mPoints.add(point);
                             OverlayItem overlayItem = new OverlayItem(point, places[i].getName(),
                                     places[i].getVicinity());
@@ -232,12 +231,12 @@ public class MapMode extends MapActivity implements OnClickListener, ServiceCall
                         Log.e("MapMode", mPlaces.getStatus());
                         if (!mMapView.getOverlays().contains(mOverlay))
                             mMapView.getOverlays().add(mOverlay);
-                        //reset status
-                        if(mMapView.getOverlays().contains(mPathOverlay))
+                        // reset status
+                        if (mMapView.getOverlays().contains(mPathOverlay))
                             mPathOverlay.cleanOverlayItem();
-                        if(mPopView!=null)
-                        mPopView.setVisibility(View.GONE);
-                        
+                        if (mPopView != null)
+                            mPopView.setVisibility(View.GONE);
+
                         mMapView.postInvalidate();
                         mHandler.obtainMessage(HTTP_HTREAD_FLASHLIST).sendToTarget();
                     } else {
@@ -320,19 +319,19 @@ public class MapMode extends MapActivity implements OnClickListener, ServiceCall
                     break;
                 case GET_PATH_COMPLETED:
                     if (mDirections != null && mDirections.getRoutes() != null) {
-                        
+
                         List<GeoPoint> points = decodePoly(mDirections.getRoutes()[0]
                                 .getOverview_polyline().getPoints());
-                        points.add(
-                                0,
-                                new GeoPoint((int) (mOrigin.getLatitude() * 1E6), (int) (mOrigin
-                                        .getLongitude() * 1E6)));
+                        points.add(0, new GeoPoint((int) (mOrigin.getLatitude() * 1E6),
+                                (int) (mOrigin.getLongitude() * 1E6)));
                         points.add(mDestination);
                         // MockProvider.generateGpsFile(points);
                         if (mPathOverlay == null) {
 
-                            mStartPinDrawable = getResources().getDrawable(R.drawable.icon_nav_start);
-                            mStartPinDrawable.setBounds(0 - mStartPinDrawable.getIntrinsicWidth() / 2,
+                            mStartPinDrawable = getResources().getDrawable(
+                                    R.drawable.icon_nav_start);
+                            mStartPinDrawable.setBounds(
+                                    0 - mStartPinDrawable.getIntrinsicWidth() / 2,
                                     0 - mStartPinDrawable.getIntrinsicHeight(),
                                     mStartPinDrawable.getIntrinsicWidth() / 2, 0);
                             mPathOverlay = new PathOverlay(points, mMapView, mPopNoBtnView,
@@ -351,8 +350,8 @@ public class MapMode extends MapActivity implements OnClickListener, ServiceCall
                                 overlayItem = new OverlayItem(new GeoPoint((int) (step
                                         .getStart_location().getLat() * 1E6), (int) (step
                                         .getStart_location().getLng() * 1E6)),
-                                        step.getHtml_instructions(), step.getDistance().getText() + "-"
-                                                + step.getDuration().getText());
+                                        step.getHtml_instructions(), step.getDistance().getText()
+                                                + "-" + step.getDuration().getText());
                                 mPathOverlay.addOverlay(overlayItem);
                             }
 
@@ -364,8 +363,8 @@ public class MapMode extends MapActivity implements OnClickListener, ServiceCall
                                     .getOverview_polyline().getPoints()));
                             mPathOverlay.getPoints().add(
                                     0,
-                                    new GeoPoint((int) (mOrigin.getLatitude() * 1E6), (int) (mOrigin
-                                            .getLongitude() * 1E6)));
+                                    new GeoPoint((int) (mOrigin.getLatitude() * 1E6),
+                                            (int) (mOrigin.getLongitude() * 1E6)));
                             mPathOverlay.getPoints().add(mDestination);
                             mPathOverlay.getOverlays().clear();
                             OverlayItem overlayItem = new OverlayItem(points.get(0),
@@ -380,8 +379,8 @@ public class MapMode extends MapActivity implements OnClickListener, ServiceCall
                                 overlayItem = new OverlayItem(new GeoPoint((int) (step
                                         .getStart_location().getLat() * 1E6), (int) (step
                                         .getStart_location().getLng() * 1E6)),
-                                        step.getHtml_instructions(), step.getDistance().getText() + "-"
-                                                + step.getDuration().getText());
+                                        step.getHtml_instructions(), step.getDistance().getText()
+                                                + "-" + step.getDuration().getText());
                                 mPathOverlay.addOverlay(overlayItem);
                             }
                         }
@@ -486,6 +485,10 @@ public class MapMode extends MapActivity implements OnClickListener, ServiceCall
         if (CAR_ROUTE != mViewType) {
             mMylocationOverlay.enableCompass();
             mMylocationOverlay.enableMyLocation();
+            Intent i = new Intent();
+            i.setClass(this, NaviAideService.class);
+            startService(i);
+            bindService(i, mServiceConnection, Context.BIND_AUTO_CREATE);
         }
         // Location location = new Location(MockProvider.MODK_PROVIDER);
         // location.setLatitude(22.538928);
@@ -497,10 +500,8 @@ public class MapMode extends MapActivity implements OnClickListener, ServiceCall
         // .init((LocationManager) getSystemService(Context.LOCATION_SERVICE))
         // .setLocation(location);
         // MockProvider.getInstance().init((LocationManager)
-        Intent i = new Intent();
-        i.setClass(this, NaviAideService.class);
-        startService(i);
-        bindService(i, mServiceConnection, Context.BIND_AUTO_CREATE);
+
+       
         super.onResume();
     }
 
@@ -591,7 +592,7 @@ public class MapMode extends MapActivity implements OnClickListener, ServiceCall
         mOverlay = new ParkItemizedOverlay(mPinDrawable, this, mMapView, mPopView, mMapController);
         // 设置显示/隐藏气泡的监听器
         // mOverlay.setOnFocusChangeListener(onFocusChangeListener);
-        
+
         // mLongPressOverlay = new LongPressOverlay(this, mMapView,
         // mMapController, mPassPinDrawable);
         // list.add(mLongPressOverlay);
@@ -684,7 +685,8 @@ public class MapMode extends MapActivity implements OnClickListener, ServiceCall
 
         }
         try {
-            mtypes = URLEncoder.encode(mtypes, "utf-8");
+            if (mtypes != null)
+                mtypes = URLEncoder.encode(mtypes, "utf-8");
         } catch (UnsupportedEncodingException e) {
             // TODO Auto-generated catch block
             e.printStackTrace();
@@ -967,6 +969,7 @@ public class MapMode extends MapActivity implements OnClickListener, ServiceCall
     protected void onDestroy() {
         // mMyLocationManager.destoryLocationManager();
         // unregisterReceiver(mSMSRec);
+        if (mViewType != CAR_ROUTE)
         unbindService(mServiceConnection);
         super.onDestroy();
     }
@@ -976,13 +979,15 @@ public class MapMode extends MapActivity implements OnClickListener, ServiceCall
         public void onServiceConnected(ComponentName name, IBinder service) {
             // TODO Auto-generated method stub
             Log.e(TAG, "onServiceConnected");
-            mMyService = ((NaviAideService.MyBinder) service).getService();
-            mMyService.setCallBack(MapMode.this);
-            if (isSearchMyLocation) {
-                mOrigin = mMyService.getLastLocation();
-                if (mOrigin != null)
-                    mMapController.animateTo(new GeoPoint((int) (mOrigin.getLatitude() * 1E6),
-                            (int) (mOrigin.getLongitude() * 1E6)));
+            if (mViewType != CAR_ROUTE) {
+                mMyService = ((NaviAideService.MyBinder) service).getService();
+                mMyService.setCallBack(MapMode.this);
+                if (isSearchMyLocation) {
+                    mOrigin = mMyService.getLastLocation();
+                    if (mOrigin != null)
+                        mMapController.animateTo(new GeoPoint((int) (mOrigin.getLatitude() * 1E6),
+                                (int) (mOrigin.getLongitude() * 1E6)));
+                }
             }
         }
 
